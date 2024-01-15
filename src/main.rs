@@ -376,9 +376,8 @@ vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
                     );
                         let thisobj = objects
                             .get_mut(i)
-                            .expect("Error getting ref")
-                            ;
-                    thisobj.set_position(0.0,0.0,-5.0);
+                            .expect("Error getting ref");
+                    //thisobj.set_position(0.0,0.0,-5.0);
                     //println!("sqaure {}",i);
                 }
             }
@@ -453,7 +452,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                         //     .set_position(data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0), data[3].parse().unwrap_or(0.0));
                         objects.update_object(data[0], |object| {
 
-                            object.set_translation(data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0), data[3].parse().unwrap_or(0.0))
+                            object.set_position(data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0), data[3].parse().unwrap_or(0.0))
 
                         });;
                     }
@@ -490,13 +489,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                             .get_mut(data[0])
                             .unwrap()
                             .set_rotatation(data[1].parse().unwrap_or(0.0), axis);
-                        objects.update_object(data[0], |object| {
-                            object.set_render_order(1).unwrap();
 
-                            object.set_scale(5.5, 0.5, 1f32);
-                            object.set_position(0.0,0.0,-10.0);
-
-                        });;
                     }
                     else{
                         cwrite("Split error on the rotation quee ","red")

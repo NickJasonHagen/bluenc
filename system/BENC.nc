@@ -79,9 +79,9 @@ class key{
 
 class player{
     //player = "player"
-    self.x = -1
+    self.x = 0
     self.y = 0
-    self.z = 0.1
+    self.z = 4.1
     self.sx = 100.0
     self.sy = 100.0
     self.sz = -100.0
@@ -90,7 +90,7 @@ class player{
 class camera{
     self.x = 0.0
     self.y = 0.0
-    self.z = 20.0
+    self.z = 10.0
 }
 
 class bmpfont{
@@ -114,6 +114,7 @@ exec(combine(@scriptdir,"system/devtools.nc"))
 //print(blueengine.textureload_q,"purple")
 spawningtimer = timerinit()
 testp = 2.0
+blueengine.setposition("cursor",player.x,player.y,player.z)
 coroutine "gameloop" {
 
     if key.event = "true"{
@@ -214,7 +215,7 @@ coroutine "gameloop" {
             devtools.runcode()
         }
         if moved == "true"{
-            blueengine.setposition("cursor",player.x,player.y,player.z)
+            blueengine.setposition("cursor",player.x ,player.y,player.z)
             camera.x = player.x
             camera.y = math player.y - 0
             blueengine.setcamerapos(camera.x,camera.y,camera.z)

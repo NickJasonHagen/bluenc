@@ -1,0 +1,17 @@
+[package]
+name = "blueenginetest"
+version = "0.1.0"
+edition = "2021"
+
+[profile.release]
+opt-level = 'z'
+overflow-checks = false
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+blue_engine = "0.5.2"
+#blue_engine = { git = "https://github.com/AryanpurTech/BlueEngine" , rev ="5e6bc453970368cb6ca0156070dd63c3f54dad4c" }
+#blue_engine_utilities = {git = "https://github.com/AryanpurTech/BlueEngineUtilities.git"}
+#nscript = { git = "https://github.com/NickJasonHagen/nscript" }
+nscript = { path = "/home/skorm/projects/nscript" }

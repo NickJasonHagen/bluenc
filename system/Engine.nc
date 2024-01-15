@@ -131,10 +131,10 @@ class blueengine{
         }
         loadtimerdiff = timerdiff(loadtimer)
         cwrite(cat("Loaded time:",loadtimerdiff),"g")
-        blueengine.addsquare("cursor")
+        blueengine.addsquare("cursor").setposition("cursor",0.0,0.0,10.0)
         ref = "blueengine_textures.resources_testimg2_png"
         blueengine.settexture("cursor",ref)
-        blueengine.bmpfont("fonttest").settexture("fonttest","blueengine_textures.resources_grass1_png").setposition("fonttest",20,10,-50).setscale("fonttest",20.1,0.1,-10.0)
+        blueengine.bmpfont("fonttest").settexture("fonttest","blueengine_textures.resources_grass1_png").setposition("fonttest",20,10,-10).setscale("fonttest",0.1,0.1,10.0)
 
     }
     func pr(msg){
