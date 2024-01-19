@@ -1,5 +1,6 @@
-#![allow(unused)]
 
+
+#![allow(unused)]
 use blue_engine::{
     primitive_shapes::{cube, square, triangle, uv_sphere},
     uniform_type::Matrix,
@@ -7,24 +8,168 @@ use blue_engine::{
     Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
-
+use blue_engine_egui::egui as gui;
 //use blue_engine_utilities::FlyCamera;
 //use nscript_v2::*;
 //extern crate nscript_v2;
-use std::collections::{HashMap};
+use std::{collections::{HashMap}, f32};
 //use std::{env, array, string};
 extern crate nscript;
+
 use nscript::*;
+fn vertex(x: f32,y: f32,z: f32) -> Vertex {
+Vertex {
+        position: [x,y, z],
+        uv: [1.0, 0.0],
+        normal: [0f32, 0f32, 0f32],
+    }
+}
+
+struct Ncanimation{
+    pub animation_map: HashMap<String,Vec<String>>,
+    pub animation_i: HashMap<String,usize>,
+    pub animation_timers:HashMap<String,i64>,
+
+    pub animation_currentframe:HashMap<String,String>,
+}
+impl Ncanimation{
+    pub fn new() -> Ncanimation{
+        Ncanimation{
+            animation_map: HashMap::new(),
+            animation_i: HashMap::new(),
+            animation_timers: HashMap::new(),
+            animation_currentframe: HashMap::new(),
+
+        }
+    }
+    pub fn set(&mut self,squareid: &str,animationarray: &Vec<String>){
+        if animationarray.len() < 2 {
+            //println!("error on the animation system, a given array doesnt meet the requirements, for ID:{}",squareid);
+            return;
+        }
+        let start_index = 2;
+        let end_index = animationarray.len(); // Use the length of the array for the end index
+        // Create a slice from start_index to the end of the array
+        let trimmed_slice:Vec<String> = animationarray[start_index..end_index].to_owned();
+        //rintln!("Settingarrayy   = {:?}",trimmed_slice);
+        self.animation_map.insert(squareid.to_string(),trimmed_slice );
+        self.animation_i.insert(squareid.to_string(),0);
+
+        let timer = match animationarray[1].parse::<i64>(){
+            Ok(f) => {
+                f
+            }
+            Err(e) => {
+                100// default 100ms, however this should not be ok.
+            }
+        };
+        self.animation_timers.insert(squareid.to_string(),timer);
+        self.animation_timers.insert(squareid.to_string() + "_diff",timer);
+
+    }
+    pub fn get(&mut self,squareid: &str) -> String{
+        match self.animation_map.get(squareid){
+            Some(res) => {
+                println!("Found: {:?}",res);
+            }
+            None =>{
+                //print!("Animation texture error for: {}",squareid);
+            }
+        }
+        "".to_string()
+    }
+    pub fn frame(&mut self,squareid:&str) -> String{
+        if squareid == ""{
+            return "".to_owned();
+        }
+        let animarray: Vec<String> = match self.animation_map.get(squareid){
+            Some(res) => {
+               res.to_owned()
+            }
+            None =>{
+                //print!("Animation texture error for: {}",squareid);
+                Vec::new()
+            }
+        };
+        let mut anim_i: usize = match self.animation_i.get(squareid){
+            Some(res) => {
+               res.to_owned()
+            }
+            None =>{
+                0
+            }
+        };
+        let  frametime: i64 = match self.animation_timers.get(squareid){
+            Some(res) => {
+               res.to_owned()
+            }
+            None =>{
+                0
+            }
+        };
+
+        let timerdiffref = squareid.to_owned() + "_diff";
+        let  timerdiff: i64 = match self.animation_timers.get(&timerdiffref){
+            Some(res) => {
+               res.to_owned()
+            }
+            None =>{
+                0
+            }
+        };
+        if Ntimer::diff(timerdiff) > frametime{
+            if animarray.len() == 0 {
+                return "".to_owned();
+            }
+            if anim_i >= animarray.len(){
+                anim_i = 0
+            }
+
+            let thisframe = animarray[anim_i].to_string();
+            anim_i = anim_i + 1;
+            self.animation_i.insert(squareid.to_string(), anim_i);
+            self.animation_timers.insert(timerdiffref, Ntimer::init());
+            self.animation_currentframe.insert(squareid.to_string(),thisframe.clone());
+             return thisframe;
+        }
+        return "".to_string();
+        let  runningframe = match self.animation_currentframe.get(squareid){
+            Some(res) => {
+               res.to_owned()
+            }
+            None =>{
+                "".to_string()
+            }
+        };
+        return runningframe;
+
+    }
+}
+
 fn main() {
+
   cwrite(" started!!","g");
     let mut vmap = Varmap::new(); // global
-    let mut engine = Engine::new().expect("win");
+    //let mut engine = Engine::new().expect("win");
+    let mut engine = Engine::new_config(WindowDescriptor { width: 1920, height: 1080, title: "Nscript&BlueEngine Testing",..Default::default()}).expect("win");
+
+
+    //engine.window.title("BlueEngine-Nscript");
     cwrite("engine started!!","g");
     //let mut engine = ENGINE.lock().unwrap();
     //let test_instance = Instance::default();
     //println!("{:?}", test_instance.to_raw());
 let mut texture_map: HashMap<String, blue_engine::wgpu::BindGroup> = HashMap::new();
-
+    // let gui_context = blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer);
+    //
+    // // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
+    // engine.plugins.push(Box::new(gui_context));
+let mut animationsystem = Ncanimation::new();
+    let mut string:Vec<String> = Vec::new();
+    string.push("123345".to_owned());
+    //animationsystem.set("test",string);
+    //animationsystem.get("test");
+    //sleep(5000);
     let speed = -0.05;
 
 
@@ -94,11 +239,7 @@ vmap.setvar("blueengine.textureload_q".to_owned(),"" );
             engine.objects.new_object(
                 i,
                 vec![
-                    Vertex {
-                    position: [1.0, 1.0, 0.0],
-                    uv: [1.0, 0.0],
-                    normal: [0f32, 0f32, 0f32],
-                    },
+                    vertex(1.0, 1.0, 0.0),
                     Vertex {
                     position: [1.0, -1.0, 0.0],
                     uv: [1.0, 1.0],
@@ -130,12 +271,13 @@ vmap.setvar("blueengine.textureload_q".to_owned(),"" );
                 object.set_translation(0.0,0.0,-10.0);
 
     });           //layer1.flag_as_changed();
-            println!("bmpfont {}",i);
+            //println!("bmpfont {}",i);
         }
     }
 vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
 
-    // spanwning quee
+    //:w
+    //spanwning quee
     for i in split(&nscript_checkvar("blueengine.square_q", &mut vmap),NC_ARRAY_DELIM){
         //cwrite(&i,"green");
         if i != "" {
@@ -148,7 +290,7 @@ vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
             engine.objects.update_object(i, |object| {
                 object.set_render_order(1).unwrap();
 
-                object.set_scale(0.5, 0.5, 1f32);
+                //object.set_scale(0.5, 0.5, 1f32);
                 object.set_translation(0.0,0.0,-10.0);
 
     });
@@ -170,7 +312,8 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
             }
             else{
-                cwrite("A split error on the position quee accuired","red")
+                cwrite("A split error on the position quee accuired","red");
+                cwrite(i,"red");
 
             }
         }
@@ -184,7 +327,7 @@ vmap.setvar("blueengine.position_q".to_owned(),"" );
 
                     let data = split(&i,",");
                     if data.len() > 0  && data[0] != ""{
-                cwrite(&i,"m");
+                //cwrite(&i,"m");
                         engine.objects
                             .get_mut(data[0])
                             .expect("Error during copying texture of the main square")
@@ -269,10 +412,258 @@ vmap.setvar("blueengine.textureset_q".to_owned(),"" );
     "key.y",
     "key.z",
 ];
+let mut animationtimer= Ntimer::init();
+    let mut uiselfname = String::new();
+
+    let mut uiselfpath  = Some("".to_string());// String::new();
+    let mut uiselfage = 1;
+        // Start the egui context
+    let gui_context =
+        blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer, &engine.window);
+
+    // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
+    engine.plugins.push(Box::new(gui_context));
+ let mut color = [1f32, 1f32, 1f32, 1f32];
 
     engine
         .update_loop(move |renderer, window, objects, input, camera, plugins| {
+      let cube_vertices = vec![
+        // Front face
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, 1.0] },
 
+        // Back face
+        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, -1.0] },
+
+        // Top face
+        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 1.0, 0.0] },
+
+        // Bottom face
+        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, -1.0, 0.0] },
+
+        // Left face
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [-1.0, 0.0, 0.0] },
+
+        // Right face
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [1.0, 0.0, 0.0] },
+    ];
+        // Define indices for the cube
+    let cube_indices = vec![
+        // Front face
+        0, 1, 2, 0, 2, 3,
+        // Back face
+        4, 5, 6, 4, 6, 7,
+        // Top face
+        8, 9, 10, 8, 10, 11,
+        // Bottom face
+        12, 13, 14, 12, 14, 15,
+        // Left face
+        16, 17, 18, 16, 18, 19,
+        // Right face
+        20, 21, 22, 20, 22, 23,
+    ];
+            let egui_plugin = plugins[0]
+                // downcast it to obtain the plugin
+                .downcast_mut::<blue_engine_egui::EGUI>()
+                .expect("Plugin not found");
+
+            // ui function will provide the context
+            for eachmenu in split(&nscript_checkvar("guiactivemenus",&mut vmap),"|"){
+                if eachmenu != ""{
+
+                    egui_plugin.ui(
+                        |ctx| {
+                            //et eachmenu = nscript_checkvar("gui.activemenu",&mut vmap);
+                            let titleref = "".to_owned() + &eachmenu.trim() + ".title";
+                            let title ="nc ".to_owned()+ &nscript_checkvar(&titleref,&mut vmap);
+                            //println!("this menu{} title:{}",eachmenu,title);
+                            gui::Window::new(&title).show(ctx, |ui| {
+                                let controllarr = arraysearch(&Nstring::replace(&vmap.inobj(&eachmenu),"|",NC_ARRAY_DELIM),"type_");
+                                let fpsmsg = "fps:".to_owned() + &vmap.getvar("fps") ;
+                                ui.label(&fpsmsg);
+
+                                //println!("inobj:{}",controllarr);
+                                for eachcontrol in split(&controllarr,NC_ARRAY_DELIM){
+                                    if eachcontrol != ""{
+                                        let eachcontroltype = "".to_owned() + &eachmenu + "." + eachcontrol;
+                                        let thistype = nscript_checkvar(&eachcontroltype,&mut vmap);
+                                        match thistype.as_str(){
+                                            "input" =>{
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut changedvar = inputvar.clone();
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+
+                                                ui.horizontal(|ui| {
+                                                    let name_label = ui.label(&originalvarname);
+                                                    ui.text_edit_singleline(&mut changedvar)
+                                                        .labelled_by(name_label.id);
+
+                                                    if changedvar != inputvar{
+                                                        vmap.setvar(originalvarname,&changedvar);
+                                                        //println!("nput:{}",inputvar);
+                                                    }
+
+                                                    //println!("input name:{}",inputname);
+                                                });
+                                            }
+                                            "label" =>{
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                ui.label(&inputvar);
+
+                                            }
+                                            "button" =>{
+
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+                                                if ui.button(&inputname).clicked() {
+                                                    let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                    let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                    let mut inputvar = nscript_parseline(&nscript_formatsheet(&inputvar),&mut vmap);// get actualvalue!
+
+                                                }
+                                            }
+                                            "file" =>{
+
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+                                                if ui.button(&inputname).clicked() {
+                                                    if let Some(path) = rfd::FileDialog::new().pick_file() {
+
+                                                        let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                        let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                        let mut inputvar = nscript_checkvar(&inputvar,&mut vmap);// get actualvalue!
+                                                        vmap.setvar(inputvarname,&format!("{:?}",path));
+                                                        let inputvarname = Nstring::replace(&eachcontroltype, "type_", "func_");
+                                                        let mut fnvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                        //let mut fnvar = nscript_checkvar(&fnvar,&mut vmap);// get actualvalue!
+                                                        let nscriptfunctiontorun = "".to_owned() + &fnvar + "(" + &format!("{:?}",path) +")";
+                                                        //println!("file - >{}",nscriptfunctiontorun);
+                                                        nscript_func(&nscriptfunctiontorun,&mut vmap);
+
+                                                    }
+
+                                                }
+                                            }
+                                            "slider" =>{
+                                                let labelname = nscript_checkvar(&eachcontroltype,&mut vmap);
+                                                let inputvarname =  Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let inputmin = match nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "min_"),&mut vmap).parse::<u32>(){
+                                                    Ok(res) => {
+                                                        res
+                                                    }
+                                                    Err(_) =>{
+                                                        0
+                                                    }
+                                                };
+
+                                                let inputmax = match nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "max_"),&mut vmap).parse::<u32>(){
+                                                    Ok(res) => {
+                                                        res
+                                                    }
+                                                    Err(_) =>{
+                                                        0
+                                                    }
+                                                };
+                                                let mut inputvarnameori = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = match nscript_checkvar(&inputvarnameori,&mut vmap).parse::<u32>(){
+                                                    Ok(res) => {
+                                                        res
+                                                    }
+                                                    Err(_) =>{
+                                                        0
+                                                    }
+                                                };// get actualvalue!
+                                                let mut changedvar = inputvar.clone();
+                                                ui.add(gui::Slider::new(&mut changedvar, inputmin..=inputmax).text(labelname));
+                                                if changedvar != inputvar{
+                                                    //println!("nput:setting{} with:{}",&inputvarname,&inputvar);
+
+                                                    vmap.setvar(inputvarnameori,&changedvar.to_string());
+                                                                                                            }
+                                            }
+                                            _ => {
+                                                println!("uhmm egui type went messed up, unknowntype :{}",thistype);
+                                            }
+                                        }
+                                    }
+
+                                }
+                            });
+
+                        },
+                        &window,
+                    );
+                }
+            }
+
+
+
+            // egui_plugin.ui(
+            //     |ctx| {
+            //         gui::Window::new("title").show(ctx, |ui| {
+                        // ui.horizontal(|ui| {
+                        //     ui.label("Pick a color");
+                        //     ui.color_edit_button_rgba_unmultiplied(&mut color);
+                        // });
+                        // ui.horizontal(|ui| {
+                        //     let name_label = ui.label("Your name: ");
+                        //     ui.text_edit_singleline(&mut uiselfname)
+                        //         .labelled_by(name_label.id);
+                        // });
+                        // ui.add(gui::Slider::new(&mut uiselfage, 0..=120).text("age"));
+                        // if ui.button("Click each year").clicked() {
+                        //     uiselfage += 1;
+                        // }
+                        // ui.label(format!("Hello '{}', age {}", uiselfname,uiselfage));
+                        //
+                        // ui.label("Drag-and-drop files onto the window!");
+                        //
+                        // if ui.button("Open file…").clicked() {
+                        //     if let Some(path) = rfd::FileDialog::new().pick_file() {
+                        //         uiselfpath = Some(path.display().to_string());
+                        //     }
+                        // }
+                        //
+                        // if let Some(picked_path) = &uiselfpath {
+                        //     ui.horizontal(|ui| {
+                        //         ui.label("Picked file:");
+                        //         ui.monospace(picked_path);
+                        //     });
+                        // }
+                    //});
+                    // vmap.getvar("");
+                    // objects
+                    //     .get_mut("dude1")
+                    //     .unwrap()
+                    //     .set_uniform_color(color[0], color[1], color[2], color[3])
+                    //     .unwrap();
+            //     },
+            //     &window,
+            // );
             // run all nscript loops , (quees be filled here and bridged to the render engine)
             nscript_loops(&mut vmap);
             vmap.setvar("key.event".to_owned(),"false");
@@ -280,35 +671,61 @@ vmap.setvar("blueengine.textureset_q".to_owned(),"" );
                 //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                 if  i != ""{
 
-                        objects.new_object(
-                            i.clone(),
-                            vec![
-                                Vertex {
-                                position: [1.0, 1.0, 0.0],
-                            uv: [1.0, 0.0],
-                            normal: [0f32, 0f32, 0f32],
-                            },
-                            Vertex {
-                            position: [1.0, -1.0, 0.0],
-                            uv: [1.0, 1.0],
-                            normal: [0f32, 0f32, 0f32],
-                            },
-                            Vertex {
-                            position: [-1.0, -1.0, 0.0],
-                            uv: [0.0, 1.0],
-                            normal: [0f32, 0f32, 0f32],
-                            },
-                            Vertex {
-                            position: [-1.0, 1.0, 0.0],
-                            uv: [0.0, 0.0],
-                            normal: [0f32, 0f32, 0f32],
-                            },
-                        ],
-                        vec![2, 1, 0, 2, 0, 3],
-                        ObjectSettings {
-                            camera_effect: false,
-                            ..Default::default()
-                        },
+                    objects.new_object(
+                        i,
+                        vec![
+                            // Front face
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, 1.0] },
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, 1.0] },
+
+        // Back face
+        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, -1.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, -1.0] },
+
+        // Top face
+        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 1.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 1.0, 0.0] },
+
+        // Bottom face
+        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, -1.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, -1.0, 0.0] },
+
+        // Left face
+        Vertex { position: [-1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [-1.0, 0.0, 0.0] },
+        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [-1.0, 0.0, 0.0] },
+
+        // Right face
+        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [1.0, 0.0, 0.0] },
+        Vertex { position: [1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [1.0, 0.0, 0.0] },
+    ],
+
+                        vec![
+        // Front face
+        0, 1, 2, 0, 2, 3,
+        // Back face
+        4, 5, 6, 4, 6, 7,
+        // Top face
+        8, 9, 10, 8, 10, 11,
+        // Bottom face
+        12, 13, 14, 12, 14, 15,
+        // Left face
+        16, 17, 18, 16, 18, 19,
+        // Right face
+        20, 21, 22, 20, 22, 23,
+    ],
+                        ObjectSettings::default(),
                         renderer
                     );
                     let layer1 = objects
@@ -347,7 +764,7 @@ vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
                 //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                 if  i != ""{
                     objects.new_object(
-                        i.clone(),
+                        i,
                         vec![
                             Vertex {
                             position: [1.0, 1.0, 0.0],
@@ -471,6 +888,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             let qbuffer = nscript_checkvar("blueengine.rotation_q", &mut vmap);
             for i in split(&qbuffer,NC_ARRAY_DELIM){
                 if i != ""{ // if queed items in pool
+                    //println!("debug:{}",i);
                     let data = split(&i,",");
                     if data.len() > 2 {// check obj,x,y,z
                         let axis = match data[2]{
@@ -509,9 +927,17 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                         camera
                             .set_position(data[0].parse().unwrap_or(0.0), data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0))
                             .expect("Couldn't update the camera eye");
+                        if data.len() > 5 {
                         camera
-                            .set_target(data[0].parse().unwrap_or(0.0), data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0) -  30.0)
+                            .set_target(data[3].parse().unwrap_or(0.0), data[4].parse().unwrap_or(0.0), data[5].parse().unwrap_or(0.0))
                             .expect("Couldn't update the camera eye");
+                        }
+                        else{
+                            camera.set_target(data[0].parse().unwrap_or(0.0), data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0))
+                            .expect("Couldn't update the camera eye");
+
+                        }
+
                     }
                     else{
                         cwrite("Split error on the rotation quee ","red")
@@ -522,6 +948,8 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                 }
             }
             vmap.setvar("blueengine.camera_q".to_owned(),"");//clearpool
+
+
             //
             let qbuffer = nscript_checkvar("blueengine.deletion_q", &mut vmap);
             for i in split(&qbuffer,NC_ARRAY_DELIM){
@@ -542,7 +970,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                 if input.key_held(keyvec[idx]) {
                     vmap.setvar(keyname[idx].to_owned(),"down");
                     vmap.setvar("key.event".to_owned(),"true");
-                    cwrite(&keyname[idx],"y")
+                    //cwrite(&keyname[idx],"y")
                 }
                 else{
                     vmap.setvar(keyname[idx].to_owned(),"up");
@@ -550,6 +978,34 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                 idx +=1;
             }
 
+            let qbuffer = nscript_checkvar("blueengine.anim_q", &mut vmap);
+            //println!("animq:{}",qbuffer);
+            for sprite in split(&qbuffer,NC_ARRAY_DELIM) {
+                if sprite != "" {
+                    //println!("full: {}",sprite);
+                    let spritesplit:Vec<String> = sprite.split("|").map(String::from).collect();
+                    //println!("array: {:?}",spritesplit);
+                    if spritesplit.len() > 1{
+                        animationsystem.set(&spritesplit[0],&spritesplit);
+                    }
+                }
+
+            }
+            vmap.setvar("blueengine.anim_q".to_owned(),"");//clearpool
+
+            if Ntimer::diff(animationtimer) > 100 {
+                                for sprite in split(&vmap.getvar("animationhandler.allsprites"),NC_ARRAY_DELIM){
+                    let thisanim = animationsystem.frame(&sprite);
+                    if thisanim != ""{
+                        objects
+                            .get_mut(sprite)
+                            .expect("Error during copying texture of the main square")
+                            .reference_texture(thisanim);
+
+                    }
+                }
+                animationtimer = Ntimer::init();
+            }
 
             //reset nscript property
         })
