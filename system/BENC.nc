@@ -11,6 +11,13 @@ class init{
     }
 
 }
+
+class loadmods{
+    func init(){
+        for mod in dirlist("./mods/")
+
+    }
+}
 class blueengine_textures{
     // used by engine
     //blueengine_textures = self
@@ -149,15 +156,32 @@ movementspeed = 0.2
 //print(cat("anims:",animationhandler.allsprites),"g")
 currentplayer = "dude1"
 tosetplayer = "dude1"
+guistart()
+co_i = 0
+coroutine "postRTload"{
+    if co_i > 0 {
+        guistart()
+        break self
+    }
+    co_i ++
+}
 coroutine "gameloop" {
     //print(cat("anims:",animationhandler.allsprites),"g")
 
     if key.event == "true"{
         if key.g == "down" && key.left = "down" {
-            testmenu2.switch()
+            
+            print(mypw,"g")
+            menus.open("testmenu2")
         }
         if key.h == "down" && key.left = "down" {
-            testmenu.switch()
+            menus.open("testmenu")
+        }
+        if key.j == "down" && key.left = "down" {
+            menus.open("testmenu|testmenu2")
+        }
+        if key.esc == "down"{
+            menus.close()
         }
         if key.i == "down"{
             bta = inobj("blueengine_textures")
@@ -274,9 +298,9 @@ coroutine "gameloop" {
     }
     if debugfps == "true"{
         fpsc ++
-        if timerdiff(fpstimer) > 9999{
-            fps = fpsc / 10
-            cwrite(combine("fps=",fps,key.event))
+        if timerdiff(fpstimer) > 999{
+            fps = fpsc // 10
+            //cwrite(combine("fps=",fps,key.event))
             fpsc = 0
             fpstimer = timerinit()
 

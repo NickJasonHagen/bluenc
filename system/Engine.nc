@@ -37,6 +37,12 @@ class blueengine{
         self.textureset_q = pooladd(self.textureset_q,obj)
     }
 
+    func setcolor(object,argb){
+        if object == "" return
+        if argb == "" return
+        obj = combine(object,",",argb)
+        self.color_q = pooladd(self.color_q,obj)
+    }
     func delete(object){
         if object == "" return
         self.deletion_q = pooladd(self.deletion_q,object)
@@ -155,5 +161,15 @@ class blueengine{
     }
     func pr(msg){
         print(cat("prr:","kaas",msg),"m")
+    }
+}
+
+class colissions{
+    func get(pointx,pointy,pointz){
+        tx = splitselect(pointx,".",0)
+        ty = splitselect(pointy,".",0)
+        tz = splitselect(pointz,".",0)
+        colissionpoint = replace(cat(tx,"_",ty,"_",tz),"-","m"))
+        return colissionpoint
     }
 }

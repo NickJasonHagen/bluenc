@@ -189,7 +189,7 @@ for character in charactersdir{
 }
 ranchar = ["dude1","dude2","girl1"]
 rani = 0
-for xr to 2550{
+for xr to 250{
     //return
     cobj = cat("char_",xr)
     obj cobj : sprite

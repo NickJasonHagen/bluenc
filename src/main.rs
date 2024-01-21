@@ -9,6 +9,10 @@ use blue_engine::{
     TextureData, Vertex, WindowDescriptor,
 };
 use blue_engine_egui::egui as gui;
+mod includes{
+    pub mod bluenc;
+}
+pub use includes::bluenc::*;
 //use blue_engine_utilities::FlyCamera;
 //use nscript_v2::*;
 //extern crate nscript_v2;
@@ -349,69 +353,72 @@ vmap.setvar("blueengine.textureset_q".to_owned(),"" );
     cwrite(&nscript_checkvar("blueengine.squarequee", &mut vmap),"red");
 
 // key mapping, used inside game_loop for bridging to nscript
-   let keyvec = [
-    blue_engine::KeyCode::ArrowUp,
-    blue_engine::KeyCode::ArrowDown,
-    blue_engine::KeyCode::ArrowLeft,
-    blue_engine::KeyCode::ArrowRight,
-    blue_engine::KeyCode::KeyA,
-    blue_engine::KeyCode::KeyB,
-    blue_engine::KeyCode::KeyC,
-    blue_engine::KeyCode::KeyD,
-    blue_engine::KeyCode::KeyE,
-    blue_engine::KeyCode::KeyF,
-    blue_engine::KeyCode::KeyG,
-    blue_engine::KeyCode::KeyH,
-    blue_engine::KeyCode::KeyI,
-    blue_engine::KeyCode::KeyJ,
-    blue_engine::KeyCode::KeyK,
-    blue_engine::KeyCode::KeyL,
-    blue_engine::KeyCode::KeyM,
-    blue_engine::KeyCode::KeyN,
-    blue_engine::KeyCode::KeyO,
-    blue_engine::KeyCode::KeyP,
-    blue_engine::KeyCode::KeyQ,
-    blue_engine::KeyCode::KeyR,
-    blue_engine::KeyCode::KeyS,
-    blue_engine::KeyCode::KeyT,
-    blue_engine::KeyCode::KeyU,
-    blue_engine::KeyCode::KeyV,
-    blue_engine::KeyCode::KeyW,
-    blue_engine::KeyCode::KeyX,
-    blue_engine::KeyCode::KeyY,
-    blue_engine::KeyCode::KeyZ,];
+    let keyvec = [
+        blue_engine::KeyCode::Escape,
+        blue_engine::KeyCode::ArrowUp,
+        blue_engine::KeyCode::ArrowDown,
+        blue_engine::KeyCode::ArrowLeft,
+        blue_engine::KeyCode::ArrowRight,
+        blue_engine::KeyCode::KeyA,
+        blue_engine::KeyCode::KeyB,
+        blue_engine::KeyCode::KeyC,
+        blue_engine::KeyCode::KeyD,
+        blue_engine::KeyCode::KeyE,
+        blue_engine::KeyCode::KeyF,
+        blue_engine::KeyCode::KeyG,
+        blue_engine::KeyCode::KeyH,
+        blue_engine::KeyCode::KeyI,
+        blue_engine::KeyCode::KeyJ,
+        blue_engine::KeyCode::KeyK,
+        blue_engine::KeyCode::KeyL,
+        blue_engine::KeyCode::KeyM,
+        blue_engine::KeyCode::KeyN,
+        blue_engine::KeyCode::KeyO,
+        blue_engine::KeyCode::KeyP,
+        blue_engine::KeyCode::KeyQ,
+        blue_engine::KeyCode::KeyR,
+        blue_engine::KeyCode::KeyS,
+        blue_engine::KeyCode::KeyT,
+        blue_engine::KeyCode::KeyU,
+        blue_engine::KeyCode::KeyV,
+        blue_engine::KeyCode::KeyW,
+        blue_engine::KeyCode::KeyX,
+        blue_engine::KeyCode::KeyY,
+        blue_engine::KeyCode::KeyZ,];
     let keyname = [ // keymapping naming ( must contain the same size and order as the keymapping!!)
-    "key.up",
-    "key.down",
-    "key.left",
-    "key.right",
-    "key.a",
-    "key.b",
-    "key.c",
-    "key.d",
-    "key.e",
-    "key.f",
-    "key.g",
-    "key.h",
-    "key.i",
-    "key.j",
-    "key.k",
-    "key.l",
-    "key.m",
-    "key.n",
-    "key.o",
-    "key.p",
-    "key.q",
-    "key.r",
-    "key.s",
-    "key.t",
-    "key.u",
-    "key.v",
-    "key.w",
-    "key.x",
-    "key.y",
-    "key.z",
-];
+
+        "key.esc",
+        "key.up",
+        "key.down",
+        "key.left",
+        "key.right",
+        "key.a",
+        "key.b",
+        "key.c",
+        "key.d",
+        "key.e",
+        "key.f",
+        "key.g",
+        "key.h",
+        "key.i",
+        "key.j",
+        "key.k",
+        "key.l",
+        "key.m",
+        "key.n",
+        "key.o",
+        "key.p",
+        "key.q",
+        "key.r",
+        "key.s",
+        "key.t",
+        "key.u",
+        "key.v",
+        "key.w",
+        "key.x",
+        "key.y",
+        "key.z",
+    ];
 let mut animationtimer= Ntimer::init();
     let mut uiselfname = String::new();
 
@@ -496,8 +503,8 @@ let mut animationtimer= Ntimer::init();
                             //println!("this menu{} title:{}",eachmenu,title);
                             gui::Window::new(&title).show(ctx, |ui| {
                                 let controllarr = arraysearch(&Nstring::replace(&vmap.inobj(&eachmenu),"|",NC_ARRAY_DELIM),"type_");
-                                let fpsmsg = "fps:".to_owned() + &vmap.getvar("fps") ;
-                                ui.label(&fpsmsg);
+                                // let fpsmsg = "fps:".to_owned() + &vmap.getvar("fps") ;
+                                // ui.label(&fpsmsg);
 
                                 //println!("inobj:{}",controllarr);
                                 for eachcontrol in split(&controllarr,NC_ARRAY_DELIM){
@@ -505,6 +512,131 @@ let mut animationtimer= Ntimer::init();
                                         let eachcontroltype = "".to_owned() + &eachmenu + "." + eachcontrol;
                                         let thistype = nscript_checkvar(&eachcontroltype,&mut vmap);
                                         match thistype.as_str(){
+                                            "link" => {
+                                                let mut inputvarlabelname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);//evaluate the variablename
+                                                //let mut originalvarname = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                //let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+
+                                                ui.hyperlink_to(inputvarlabelname, originalvarname);
+                                            }
+                                            "checkbox" =>{
+                                                let mut inputvarlabelname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);//evaluate the variablename
+                                                //let mut originalvarname = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut  mybool = match inputvar.as_str(){
+                                                    "true" => true,
+                                                    _ => false
+                                                };
+                                                let mut changedvar = mybool.clone();
+
+                                                //ui.label(&inputvarlabelname);
+                                                //ui.checkbox(&mut mybool, &inputvarlabelname);
+                                                ui.add(gui::Checkbox::new(&mut mybool, &inputvarlabelname));
+                                                if changedvar != mybool{
+                                                    vmap.setvar(originalvarname,&mybool.to_string());
+
+                                                }
+                                            }
+                                            "radio" => {
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut selected  = inputvar.clone();
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+                                                let arrayitems = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "func_"),&mut vmap);
+                                                let selidvarname = Nstring::replace(&eachcontroltype, "type_", "selected_");
+                                                let selidval = nscript_checkvar(&selidvarname,&mut vmap);
+                                                let selid = nscript_checkvar(&selidval,&mut vmap);
+                                                let mut selected = match selid.parse::<usize>(){
+                                                    Ok(res) =>{
+                                                        res
+                                                    }
+                                                    Err(e) =>{
+                                                        0
+                                                    }
+                                                };
+                                                let alternatives = split(&arrayitems,NC_ARRAY_DELIM);
+                                                //let mut selected = 0;
+                                                let mut sel2 = selected.clone();
+                                                let mut i = 0;
+                                                ui.label(&inputname);
+                                                for x in alternatives.clone(){
+
+                                                    if i != selected {
+
+                                                        if ui.radio(false,x).clicked(){
+                                                            sel2 = i;
+                                                        };
+                                                    }else{
+                                                        if ui.radio(true,alternatives[selected]).clicked(){
+                                                            sel2 = i;
+                                                        };
+                                                        ;
+
+                                                    }
+                                                    i +=1;
+                                                }
+
+                                                if alternatives[selected] != alternatives[sel2]{
+                                                    vmap.setvar(originalvarname,&alternatives[sel2]);
+
+                                                    vmap.setvar(selidvarname,&sel2.to_string());
+                                                    //println!("nput:{}",inputvar);
+                                                }
+                                            }
+                                            "combo" => {
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut selected  = inputvar.clone();
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+                                                let arrayitems = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "func_"),&mut vmap);
+                                                let selidvarname = Nstring::replace(&eachcontroltype, "type_", "selected_");
+                                                let selid = nscript_checkvar(&selidvarname,&mut vmap);
+                                                let mut selected = match selid.parse::<usize>(){
+                                                    Ok(res) =>{
+                                                        res
+                                                    }
+                                                    Err(e) =>{
+                                                        0
+                                                    }
+                                                };
+                                                let alternatives = split(&arrayitems,NC_ARRAY_DELIM);
+                                                //let mut selected = 0;
+                                                gui::ComboBox::from_label(&inputvar).show_index(
+                                                    ui,
+                                                    &mut selected,
+                                                    alternatives.len(),
+                                                    |i| alternatives[i]
+                                                );
+                                                if alternatives[selected] != inputvar{
+                                                    vmap.setvar(originalvarname,&alternatives[selected]);
+
+                                                    vmap.setvar(selidvarname,&selected.to_string());
+                                                    //println!("nput:{}",inputvar);
+                                                }
+                                            }
+                                            "password" =>{
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut changedvar = inputvar.clone();
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+
+                                                password(&mut changedvar);
+                                                //println!("input name:{}",inputname);
+
+                                            }
                                             "input" =>{
                                                 let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
                                                 let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
@@ -528,9 +660,12 @@ let mut animationtimer= Ntimer::init();
                                                 });
                                             }
                                             "label" =>{
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "control_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
                                                 let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
                                                 let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
-                                                ui.label(&inputvar);
+                                                let mut inputvar = nscript_checkvar(&inputvar,&mut vmap);
+                                                ui.label("".to_owned()+&originalvarname+ &inputvar);
 
                                             }
                                             "button" =>{
@@ -603,7 +738,28 @@ let mut animationtimer= Ntimer::init();
                                                     //println!("nput:setting{} with:{}",&inputvarname,&inputvar);
 
                                                     vmap.setvar(inputvarnameori,&changedvar.to_string());
-                                                                                                            }
+                                                }
+                                            }
+                                            "color" => {
+
+                                                let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                let mut originalvarname = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                let mut inputvar = nscript_checkvar(&originalvarname,&mut vmap);// get actualvalue!
+                                                let mut changedvar = inputvar.clone();
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+
+                                                // ui.horizontal(|ui| {
+                                                ui.label(&inputname);
+                                                ui.color_edit_button_rgba_unmultiplied(&mut color);
+                                                changedvar = "".to_owned() + &color[0].to_string() + "," + &color[1].to_string() + "," + &color[2].to_string() + "," + &color[3].to_string() ;
+                                                if changedvar != inputvar{
+                                                    //println!("nput:setting{} with:{}",&inputvarname,&inputvar);
+
+                                                    vmap.setvar(originalvarname,&changedvar.to_string());
+                                                }
+
                                             }
                                             _ => {
                                                 println!("uhmm egui type went messed up, unknowntype :{}",thistype);
@@ -854,6 +1010,37 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             }
             vmap.setvar("blueengine.scale_q".to_owned(),"" );
 
+            let qbuffer = nscript_checkvar("blueengine.color_q", &mut vmap);
+            for i in split(&qbuffer,NC_ARRAY_DELIM){
+                if i != ""{ // if queed items in pool
+                    let data = split(&i,",");
+                    if data.len() > 4 {
+                        let color1 = match data[1].parse::<f32>(){
+                            Ok(r) => r,
+                            Err(e) => 0.0,
+                        };
+                        let color2 = match data[2].parse::<f32>(){
+                            Ok(r) => r,
+                            Err(e) => 0.0,
+                        };
+                        let color3 = match data[3].parse::<f32>(){
+                            Ok(r) => r,
+                            Err(e) => 0.0,
+                        };
+                        let color4 = match data[4].parse::<f32>(){
+                            Ok(r) => r,
+                            Err(e) => 0.0,
+                        };
+
+                        objects
+                            .get_mut(data[0])
+                            .unwrap()
+                            .set_uniform_color(color1, color2, color3, color4)
+                            .unwrap();
+                    }
+                }
+            }
+            vmap.setvar("blueengine.color_q".to_owned(),"" );
             // Bridge: Nscript scale Quee handler.
             // in nscript class blueengine.position_q is used by func blueengine.setposition()
 
