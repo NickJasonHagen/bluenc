@@ -2,19 +2,31 @@
 class null{
 
 }
+
 class gui{
     // consist of bridging towards the rust blue-engine
     func construct(){
-        if self == "gui" return "recurssionoverflow.prevention"
-        //print(cat("menu ",self," added mode:",self.menuopenclose))
-            
-    }
+        if self == "gui"{
+            return
+        }
 
+    }
     func new(newself,newtitle){
         self.title = newtitle
+        self.controlids = 0
+        prop = self.getid("button")
+        self.*prop = "[x]"
+        tmp = cat("menus.closebyname(",self,")")
+        self.*varprop = tmp  
         return self
     }
+    func closebutton(){
+        prop = self.getid("button")
+        self.*prop = "[x]"
+        tmp = cat("menus.closebyname(",self,")")
+        self.*varprop = tmp
 
+    }
     func addbutton(labelname,variablenscriptcodeasstring){
         prop = self.getid("button")
         self.*prop = labelname
@@ -104,6 +116,7 @@ class gui{
 
     }
     func getid(typec){
+        //print(cat("newmenu id:",self.controlids," self:",self),"y")
         self.controlids = math self.controlids + 1
         typeprop = cat("type_",self.controlids)
         self.*typeprop = typec
@@ -140,58 +153,91 @@ class gui{
     self.switchtimer = timerinit()
 }
 
+
 class menus{
+    func construct(){
+        guiactivemenus = ""
+        self.switchtimer = timerinit()
+    }
     func open(name){
-        guiactivemenus = name
+        //guiactivemenus = name
         if instring(guiactivemenus,name) == 0{
             if instring(guiactivemenus,"|") == 0{
                 guiactivemenus = name
             }
             else{
-                guiactivemenus = print(cat(guiactivemenus,name,"|"))
+                guiactivemenus = cat(guiactivemenus,name,"|")
             }
-            
+            self.switchtimer = timerinit()
+        }
+        else{
+            if timerdiff(self.switchtimer) > 300 {
+                menus.closebyname(name)
+            }
         }
     }
     func close(){
-         guiactivemenus = ""
-         return
-        self.sgui = split(guiactivemenus,"|")
-        guiactivemenus = ""
-        i = 0
-        last = self.sgui[?] - 1
-        for g to last{
-            i ++
-            if i != last{labellll
-                if self.sgui[g] != ""{
-                    guiactivemenus = cat(guiactivemenus,self.sgui[g],"|")
-                }
-            } 
+        if timerdiff(self.switchtimer) < 300 {
+            return
         }
-        if last > 1{
-            guiactivemenus = print(trimright(guiactivemenus,1))
+        else{
+            if guiactivemenus == ""{
+                menus.open("mainmenu")
+                return
+            } 
+            self.sgui = split(guiactivemenus,"|")
+            guiactivemenus = ""
+            i = 0
+            last = self.sgui[?] - 1
+            for g in self.sgui{
+                i ++
+                if i != last{
+                    if g != ""{
+                        guiactivemenus = cat(guiactivemenus,g,"|")
+                    }
+                } 
+            }
+
+            if instring(guiactivemenus,"|") == 0{
+                guiactivemenus = ""
+            }
+            self.switchtimer = timerinit()
         }
         
     }
-    guiactivemenus = ""
+    func closebyname(name){
+        if instring(guiactivemenus,cat(name,"|")) == 1{
+            guiactivemenus = replace(guiactivemenus,cat(name,"|"),"")
+        }
+        else{
+            if instring(guiactivemenus,cat(name,"|")) == 1{
+                guiactivemenus = replace(guiactivemenus,name,"")
+            }           
+        }
+    }
+
 }
 
 func guistart(){
-    obj testmenu : gui
+    //testmenu1 = "testmenu1"
+    //testmenu2 = "testmenu2"
+    //mainmenu = "mainmenu"
+    obj testmenu1 : gui
     obj testmenu2 : gui
-    testmenu.construct()
-    testmenu2.construct()
+    //testmenu1.construct()
+    //testmenu2.construct()
     guiactivemenus = ""//cat(guiactivemenus,"testmenu")   
-mypw = "123"
-tarray = inobj(blueengine_textures)// 
-tarray2 = ["123","456","789"]
-print(tarray,"bp")
-boxy = false
-bb = "123"
+    mypw = "123"
+    tarray = inobj(blueengine_textures)// 
+    tarray2 = ["123","456","789"]
+    print(tarray,"bp")
+    boxy = true
+    bb = "123"
+    playertoset = "dude1"
+    Checkboxy = "oi"
+    link = "http://nscript.duckdns.org"
 
-Checkboxy = "oi"
-link = "http://nscript.duckdns.org"
-    testmenu.new("testmenu","mytestGui")
+    testmenu1.new("testmenu1","mytestGui")
     .addlabel("fps=","fps")
     .addhyperlink("Nscript",link)
     .addinput("playerx","player.x")
@@ -211,14 +257,51 @@ link = "http://nscript.duckdns.org"
     .addlabel("->","bb")
     
 
-    playertoset = "dude1"
+
     testmenu2.new("testmenu2","mytestGui2")
     .addinput("setplayer","playertoset")
     .addinput("NscriptVersion","@nscriptversion")
     .addlabel("cameraz","camera.z").filebox("somefile","filepath","print")
     .addslider("speed",1,10,"player.movementspeed")
     .addpassword("pw",mypw)
-    
 
+    //menus.construct()
+    viewingclas = "char_22"
+    obj mainmenu : gui
+    mainmenu.new("mainmenu","Main Menu BlueNC")
+    .addlabel("fps","fps")
+    .addbutton("Testmenu1","menus.open(testmenu1)")
+    .addbutton("Testmenu2","menus.open(testmenu2)")
+    .addbutton("clasmenu","menus.open(clasmenu)")
+    
+    obj clasmenu : gui
+    clasmenu.new("clasmenu","Clas eviewer")
+    .addinput("Classdata:","viewingclas")
+    .addbutton("load","reloadclasviewer()")
 }
 
+func reloadclasviewer(){
+    catchvar = viewingclas
+    print(cat("reloading!",viewingclas," in:",inobj(viewingclas)),"g")
+    rtmptimer = timerinit()
+    menus.closebyname(catchvar)
+    coroutine "reloaderviewer"{
+        if timerdiff(rtmptimer) > 50{
+            delobj(clasmenu)
+            obj clasmenu : gui
+            clasmenu.new("clasmenu","Class eviewer")
+            .addinput("Clasdata","viewingclas")
+            .addbutton("load","reloadclasviewer()")
+            debugmode(1)
+            for oi in inobj(catchvar){
+                tosetvar = cat catchvar "." oi
+                clasmenu.addinput(oi,tosetvar)
+                print(cat("adding input:",oi),"y")
+            }
+            debugmode(0)
+            //menus.open(clasmenu)     
+            break "reloaderviewer"
+        }
+    }
+
+}

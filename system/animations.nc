@@ -161,6 +161,9 @@ class sprite{
         blueengine.setposition(this,tox,toy,toz)
         
     }
+    self.x = tox
+    self.y = toy
+    self.z = toz
     self.currentanim = "anim_unset"
     self.currentframe = 0 //<- arrayId not imagename
     self.animationtimer = timerinit()

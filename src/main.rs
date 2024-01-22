@@ -492,11 +492,13 @@ let mut animationtimer= Ntimer::init();
                 .expect("Plugin not found");
 
             // ui function will provide the context
-            for eachmenu in split(&nscript_checkvar("guiactivemenus",&mut vmap),"|"){
-                if eachmenu != ""{
+            let eachmenu  = nscript_checkvar("guiactivemenus",&mut vmap);
 
-                    egui_plugin.ui(
-                        |ctx| {
+
+            egui_plugin.ui(
+                |ctx| {
+                    for eachmenu in split(&nscript_checkvar("guiactivemenus",&mut vmap),"|"){
+                        if eachmenu != ""{
                             //et eachmenu = nscript_checkvar("gui.activemenu",&mut vmap);
                             let titleref = "".to_owned() + &eachmenu.trim() + ".title";
                             let title ="nc ".to_owned()+ &nscript_checkvar(&titleref,&mut vmap);
@@ -615,7 +617,7 @@ let mut animationtimer= Ntimer::init();
                                                     ui,
                                                     &mut selected,
                                                     alternatives.len(),
-                                                    |i| alternatives[i]
+                                                    |selected| alternatives[selected]
                                                 );
                                                 if alternatives[selected] != inputvar{
                                                     vmap.setvar(originalvarname,&alternatives[selected]);
@@ -647,7 +649,7 @@ let mut animationtimer= Ntimer::init();
 
 
                                                 ui.horizontal(|ui| {
-                                                    let name_label = ui.label(&originalvarname);
+                                                    let name_label = ui.label(&inputname);
                                                     ui.text_edit_singleline(&mut changedvar)
                                                         .labelled_by(name_label.id);
 
@@ -769,12 +771,13 @@ let mut animationtimer= Ntimer::init();
 
                                 }
                             });
+                        }
+                    }
+                },
+                &window,
+            );
+                //}
 
-                        },
-                        &window,
-                    );
-                }
-            }
 
 
 
