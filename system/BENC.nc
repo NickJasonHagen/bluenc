@@ -168,9 +168,9 @@ coroutine "postRTload"{
 }
 coroutine "gameloop" {
     //print(cat("anims:",animationhandler.allsprites),"g")
-
+print("i")
     if key.event == "true"{
-
+print("key")
         if key.esc == "down"{
             menus.close()
         }

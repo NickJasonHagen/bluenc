@@ -8,7 +8,8 @@ use blue_engine::{
     Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
-use blue_engine_egui::egui as gui;
+use blue_engine_utilities::egui;
+use blue_engine_utilities::egui::egui as gui;
 mod includes{
     pub mod bluenc;
 }
@@ -18,9 +19,10 @@ pub use includes::bluenc::*;
 //extern crate nscript_v2;
 use std::{collections::{HashMap}, f32};
 //use std::{env, array, string};
-extern crate nscript;
+extern crate  nscript;
 
 use nscript::*;
+
 fn vertex(x: f32,y: f32,z: f32) -> Vertex {
 Vertex {
         position: [x,y, z],
@@ -426,7 +428,7 @@ let mut animationtimer= Ntimer::init();
     let mut uiselfage = 1;
         // Start the egui context
     let gui_context =
-        blue_engine_egui::EGUI::new(&engine.event_loop, &mut engine.renderer, &engine.window);
+        egui::EGUI::new(&engine.event_loop, &mut engine.renderer, &engine.window);
 
     // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
     engine.plugins.push(Box::new(gui_context));
@@ -488,7 +490,7 @@ let mut animationtimer= Ntimer::init();
     ];
             let egui_plugin = plugins[0]
                 // downcast it to obtain the plugin
-                .downcast_mut::<blue_engine_egui::EGUI>()
+                .downcast_mut::<egui::EGUI>()
                 .expect("Plugin not found");
 
             // ui function will provide the context

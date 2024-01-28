@@ -13,11 +13,12 @@ overflow-checks = false
 
 [dependencies]
 blue_engine = "0.5.2"
-blue_engine_egui = "0.5.2"
+#blue_engine_egui = "0.5.2"
+blue_engine_utilities = "0.1.7"
 #blue_engine = { git = "https://github.com/AryanpurTech/BlueEngine" , rev ="5e6bc453970368cb6ca0156070dd63c3f54dad4c" }
 #blue_engine_utilities = {git = "https://github.com/AryanpurTech/BlueEngineUtilities.git"}
-nscript = { git = "https://github.com/NickJasonHagen/nscript" }
-#nscript = { path = "/home/skorm/projects/nscript" }
+#nscript = { git = "https://github.com/NickJasonHagen/nscript" }
+nscript = { path = "/home/skorm/projects/nscript" }
 #egui = "0.23.0"
 #egui-winit = "0.23.0"
 #egui-wgpu = { version = "0.23.0", features = ["winit"] }
