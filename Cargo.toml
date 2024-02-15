@@ -12,6 +12,7 @@ overflow-checks = false
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+nalgebra = "0.32.3"
 blue_engine = "0.5.2"
 #blue_engine_egui = "0.5.2"
 blue_engine_utilities = "0.1.7"

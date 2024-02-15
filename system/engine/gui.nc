@@ -1,8 +1,4 @@
 //gui code blueengine wrapper
-class null{
-
-}
-
 class gui{
     // consist of bridging towards the rust blue-engine
     func construct(){
@@ -101,15 +97,22 @@ class gui{
         self.*varprop = variable
     }
 
-    func filebox(labelname,variable,function){
-        prop = self.getid("file")
+    func openfilebox(labelname,variable,function){
+        prop = self.getid("fileopen")
         varprop = cat("var_",self.controlids)
         self.*prop = labelname
         self.*varprop = variable
         funcprop = cat("func_",self.controlids)
         self.*funcprop = function
     }
-
+    func savefilebox(labelname,variable,function){
+        prop = self.getid("filesave")
+        varprop = cat("var_",self.controlids)
+        self.*prop = labelname
+        self.*varprop = variable
+        funcprop = cat("func_",self.controlids)
+        self.*funcprop = function
+    }
     func show(){
         print(cat("showing:",self),"br")
         print(cat("ObjectDisplay:",object.display(self)),"r")
@@ -161,16 +164,17 @@ class menus{
     }
     func open(name){
         //guiactivemenus = name
-        if instring(guiactivemenus,name) == 0{
-            if instring(guiactivemenus,"|") == 0{
-                guiactivemenus = name
+        if instring(guiactivemenus,name) == false {
+            if instring(guiactivemenus,"|") == false {
+                guiactivemenus = print(name,"b")
             }
             else{
-                guiactivemenus = cat(guiactivemenus,name,"|")
+                guiactivemenus = print(cat(guiactivemenus,name,"|"))
             }
             self.switchtimer = timerinit()
         }
         else{
+            print(cat("not in name , closing ",name))
             if timerdiff(self.switchtimer) > 300 {
                 menus.closebyname(name)
             }
@@ -182,6 +186,7 @@ class menus{
         }
         else{
             if guiactivemenus == ""{
+                print("opening main")
                 menus.open("mainmenu")
                 return
             } 
@@ -198,7 +203,7 @@ class menus{
                 } 
             }
 
-            if instring(guiactivemenus,"|") == 0{
+            if instring(guiactivemenus,"|") == false {
                 guiactivemenus = ""
             }
             self.switchtimer = timerinit()
@@ -206,16 +211,17 @@ class menus{
         
     }
     func closebyname(name){
-        if instring(guiactivemenus,cat(name,"|")) == 1{
+        if instring(guiactivemenus,cat(name,"|")) == true {
             guiactivemenus = replace(guiactivemenus,cat(name,"|"),"")
         }
         else{
-            if instring(guiactivemenus,cat(name,"|")) == 1{
+            if instring(guiactivemenus,cat(name,"|")) == true {
                 guiactivemenus = replace(guiactivemenus,name,"")
             }           
         }
     }
-
+        guiactivemenus = ""
+        self.switchtimer = timerinit()
 }
 
 func guistart(){
@@ -230,10 +236,10 @@ func guistart(){
     mypw = "123"
     tarray = inobj(blueengine_textures)// 
     tarray2 = ["123","456","789"]
-    print(tarray,"bp")
-    boxy = true
+    //print(tarray,"bp")
+    boxy = "true"
     bb = "123"
-    playertoset = "dude1"
+    
     Checkboxy = "oi"
     link = "http://nscript.duckdns.org"
 
@@ -247,15 +253,16 @@ func guistart(){
     .addinput("setplayer","playertoset")
     .addbutton("set player","currentplayer = camera.switch(playertoset)")
     .addslider("speed",1,10,"player.movementspeed")
-    .addlabel("colission","colissions.get(player.x,player.y,player.z)")
+    .addlabel("colission","colissions.getpoint(player.x,player.y,player.z)")
     .addcolorpicker("PickColor","selectedcolor")
     .addbutton("setcolor","blueengine.setcolor(currentplayer,selectedcolor)")
-    .addcombo("aa22","aa",tarray)
+    .addcombo("aa22","aa","tarray")
     .addcheckbox("Checkboxy","boxy")
     .addlabel("boxstatus:","boxy")
-    .addradio("myradio","bb",tarray2)
+    .addradio("myradio","bb","tarray2")
     .addlabel("->","bb")
-    
+    //.show()
+
 
 
     testmenu2.new("testmenu2","mytestGui2")
@@ -270,14 +277,21 @@ func guistart(){
     obj mainmenu : gui
     mainmenu.new("mainmenu","Main Menu BlueNC")
     .addlabel("fps","fps")
+    .addlabel("colission:","*currentplayer.colissionpoint")
     .addbutton("Testmenu1","menus.open(testmenu1)")
     .addbutton("Testmenu2","menus.open(testmenu2)")
+    .addbutton("modeleditor","menus.open(modeleditor)")
+    .addbutton("mapeditor","menus.open(mapeditor)")
     .addbutton("clasmenu","menus.open(clasmenu)")
-    
+    //.show()
+
     obj clasmenu : gui
     clasmenu.new("clasmenu","Clas eviewer")
     .addinput("Classdata:","viewingclas")
     .addbutton("load","reloadclasviewer()")
+    //.show()
+    //exec(print(cat(@nscriptpath,"/test.nc")))
+    sleep(1000)
 }
 
 func reloadclasviewer(){

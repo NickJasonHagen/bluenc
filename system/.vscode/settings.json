@@ -1,0 +1,12 @@
+{
+  "files.associations": {
+    "*.nc": "swift"
+  },
+  "swift.format.options": {
+    "indentation": "spaces",
+    "tabWidth": 4
+  }
+"[swift]": {
+  "editor.autoIndent": "advanced"
+}
+}

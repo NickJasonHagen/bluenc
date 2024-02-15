@@ -1,13 +1,15 @@
 class init{
     func construct(){
-        print(cat("1","2","3"),"lb")
-        exec(combine(@scriptdir,"system/devtools.nc"))
-        exec(cat(@scriptdir,"/system/Engine.nc"))
-        exec(cat(@scriptdir,"/system/gui.nc"))
-        exec(cat(@scriptdir,"/system/animations.nc"))
-        //blueengine.constructer()
-        //blueengine.pr("jemoeder")
-        //print(iscode("blueengine__pr"))
+        exec(cat(@scriptdir,"/system/devtools.nc"))
+        exec(cat(@scriptdir,"/system/engine/core.nc"))
+        exec(cat(@scriptdir,"/system/engine/camera.nc"))
+        exec(cat(@scriptdir,"/system/engine/gui.nc"))
+        exec(cat(@scriptdir,"/system/engine/colission.nc"))
+        exec(cat(@scriptdir,"/system/engine/animations.nc"))
+        exec(cat(@scriptdir,"/system/engine/tools/modeleditor.nc"))
+        exec(cat(@scriptdir,"/system/engine/tools/mapeditor.nc"))
+        exec(cat(@scriptdir,"/system/engine/map/map.nc"))
+        exec(cat(@scriptdir,"/system/engine/controls.nc"))
     }
 
 }
@@ -18,6 +20,7 @@ class loadmods{
 
     }
 }
+
 class blueengine_textures{
     // used by engine
     //blueengine_textures = self
@@ -29,107 +32,20 @@ class key{
 
 class player{
     //player = "player"
-    self.x = 0
-    self.y = 0
+    self.x = 20
+    self.y = -15
     self.z = 4.1
     self.sx = 100.0
     self.sy = 100.0
     self.sz = -100.0
     self.movedtimer = timerinit()
-    self.movementspeed = 0.2
+    self.movementspeed = 0.4
 }
 
-class camera{
-    func switch(towardschar){
-        debugmode(1)
-        print(cat("moving to char:",towardschar),"bp")
-        player.x = *towardschar.x
-        player.y = *towardschar.y
-        player.z = *towardschar.z
-        print(cat("pos:",*towardschar.x,"-",*towardschar.y,"-",*towardschar.z),"p")
-        player.movedtimer = timerinit()
-        blueengine.setposition("cursor",player.x ,player.y,player.z)
-        camera.x = player.x
-        camera.y = player.y - 3
-        blueengine.setcamerapos(camera.x,camera.y,camera.z,player.x,math("player.y + 30"),math("player.z - 100"))
-        //print(cat("PlayerDebugPos:x",player.x,",y",player.y,",z",player.z))
-        moved = "false"
-        debugmode(0)
-        return towardschar    
-    }
-    camera "camera"
-    camera.x = 0.0
-    camera.y = 0.0
-    camera.z = 10.0
-    camera.targety = 2
-    camera.targetx = 0
-    camera.targetz = -10
-    //print(object.display(self))
-}
+
 
 class bmpfont{
 
-}
-class spritetest{
-    func load(sprite_name,texture_name){
-        self.spriteids ++
-        thisid = cat("nsprite",self.spriteids)
-
-        blueengine.addsquare(thisid)
-        .settexture(thisid,"blueengine_textures.resources_bmpfont_rngwhite_a_png")
-        .setposition(thisid,player.x,player.y,player.z)
-
-        print(thisid)
-        
-        tmp = thisid
-        *tmp.animationi = 0
-        *tmp.timeranimation = timerinit()
-        *tmp.timerrotation = timerinit()
-        *tmp.closetimer = timerinit()
-        *tmp.animframetime = random(100,900)
-        *tmp.rotor = 0
-        animsarray = [
-            "blueengine_textures.resources_bmpfont_rngwhite_a_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_b_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_c_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_d_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_e_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_f_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_g_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_h_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_i_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_j_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_k_png",
-            "blueengine_textures.resources_bmpfont_rngwhite_l_png",
-            ]
-        coroutine thisid{
-            this = self
-            if *this.timeranimation != ""{
-                if timerdiff(*this.timeranimation) > *this.animframetime {
-                    *this.timeranimation = timerinit()
-                    blueengine.settexture(this,animsarray[*this.animationi])
-                    *this.animationi = *this.animationi + 1
-                    if *this.animationi == animsarray[?]{
-                        *this.animationi = 0
-                    }
-                }
-            }
-            if timerdiff(*this.timerrotation) > 120 {
-                *this.rotor = *this.rotor + 0.1
-                blueengine.setrotation(this,*this.rotor,"z")
-                *this.timerrotation = timerinit()
-            }
-           if timerdiff(*this.closetimer) > 8000 {
-                
-                blueengine.delete(this)
-                break this
-            }
-        }
-    }
-    func move(){
-    //asd
-    }
-    self.spriteids = 0
 }
 
 //blueengine.setposition("main",0.0,0.0,0.0)
@@ -150,119 +66,41 @@ print("BENC.nc loaded.")
 spawningtimer = timerinit()
 testp = 2.0
 blueengine.setposition("cursor",player.x,player.y,player.z)
-movementspeed = 0.2
+movementspeed = 0.5
 //print(inobj("nscript_loops"),"b")
 //sprite.handler()
 //print(cat("anims:",animationhandler.allsprites),"g")
-currentplayer = "dude1"
-tosetplayer = "dude1"
-//guistart()
+currentplayer = "rocketguy"
+playertoset = "cammy"
+player.lastmovedside = ""
 co_i = 0
+cmoved = false
+// trigger stuff after the everything is loaded
+// routine will break after the first frame!
 coroutine "postRTload"{
     if co_i > 0 {
         guistart()
+        modeleditor.init()
+        mapeditor.init()
         print("postloader:ready!")
         break "postRTload"
     }
     co_i ++
 }
+map.testmap()
+// set the current control mode to a function inside the controls class
+controlmode = "ingame"
+*currentplayer.setpos(player.x ,player.y,0.4)
+player.movedtimer = timerinit()
+blueengine.setposition("cursor",player.x ,player.y,player.z)
+blueengine.setcamerapos(camera.x,camera.y,camera.z,player.x,math("player.y + 30"),math("player.z - 100"))
 coroutine "gameloop" {
-    //print(cat("anims:",animationhandler.allsprites),"g")
-print("i")
-    if key.event == "true"{
-print("key")
-        if key.esc == "down"{
-            menus.close()
-        }
 
-
-        if instring(guiactivemenus,"clasmenu") == 0{
-            if key.left = "down"{
-                camera.x = math camera.x - math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if key.right = "down"{
-                camera.x = math camera.x + math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if key.up = "down"{
-                camera.z = math camera.z - math("player.movementspeed / 10") - math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if key.down = "down"{
-                camera.z = math camera.z + math("player.movementspeed / 10") + math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if key.n = "down"{
-                camera.y = math camera.y - math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if key.m = "down"{
-                camera.y = math camera.y + math("player.movementspeed / 10")
-                cmoved = "true"
-            }
-            if cmoved == "true" {
-                blueengine.setcamerapos(camera.x,camera.y,camera.z,camera.x,math("camera.y + 30"),math("camera.z - 100"))
-                cmoved = "false"
-                temp = cat camera.x "," camera.y "," camera.z
-                //print(temp)
-            }
-            if key.a == "down"{
-                *currentplayer.setanim("anim_left")
-                player.lastmovedside = "left"
-                player.x = math player.x - math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.d == "down"{
-                *currentplayer.setanim("anim_right")
-                player.lastmovedside = "right"
-                player.x = math player.x + math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.w == "down"{
-                *currentplayer.setanim("anim_up")
-                player.lastmovedside = "up"
-                player.y = math player.y + math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.s == "down"{
-                *currentplayer.setanim("anim_down")
-                player.lastmovedside = "down"
-                player.y = math player.y - math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.q == "down"{
-                player.z = math player.z - math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.e == "down"{
-                player.z = math player.z + math("player.movementspeed / 10")
-                moved = "true"
-            }
-            if key.o == "down"{
-                //player.sx = math player.sx - movementspeed
-                //blueengine.setscale("main",player.sx,player.sy,player.sy)
-            }
-            if key.x == "down" && key.left = "down"{
-                devtools.runcode()
-            }
-            if moved == "true"{
-                blueengine.setposition(currentplayer,player.x ,player.y,0.8)
-                player.movedtimer = timerinit()
-                blueengine.setposition("cursor",player.x ,player.y,player.z)
-                camera.x = player.x
-                camera.y = math player.y - 3
-                blueengine.setcamerapos(camera.x,camera.y,camera.z,player.x,math("player.y + 30"),math("player.z - 100"))
-                //print(cat("PlayerDebugPos:x",player.x,",y",player.y,",z",player.z))
-                moved = "false"
-            }
-        }
-    }
-
-
+    controls.*controlmode()
     if timerdiff(player.movedtimer) > 100{
-        dude1.setanim(cat("anim_idle",player.lastmovedside))
+        *currentplayer.setanim(cat("anim_idle",player.lastmovedside))
     }
+
     if debugfps == "true"{
         fpsc ++
         if timerdiff(fpstimer) > 999{
@@ -270,11 +108,7 @@ print("key")
             //cwrite(combine("fps=",fps,key.event))
             fpsc = 0
             fpstimer = timerinit()
-
         }
-
     }
-
-
 
 }

@@ -8,18 +8,25 @@ use blue_engine::{
     Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
     TextureData, Vertex, WindowDescriptor,
 };
+//use blue_engine_egui::egui as gui;
 use blue_engine_utilities::egui;
 use blue_engine_utilities::egui::egui as gui;
+use std::env;
 mod includes{
     pub mod bluenc;
+    pub mod maps;
+    pub mod bn3models;
 }
 pub use includes::bluenc::*;
+pub use includes::maps::*;
+
+pub use includes::bn3models::*;
 //use blue_engine_utilities::FlyCamera;
 //use nscript_v2::*;
 //extern crate nscript_v2;
 use std::{collections::{HashMap}, f32};
 //use std::{env, array, string};
-extern crate  nscript;
+extern crate nscript;
 
 use nscript::*;
 
@@ -156,6 +163,41 @@ fn main() {
 
   cwrite(" started!!","g");
     let mut vmap = Varmap::new(); // global
+    let args: Vec<String> = env::args().collect();
+    //println!("Program name: {}", args[0]);
+
+    // Print other arguments passed to the program
+    let mut newargs: Vec<String> = Vec::new();
+    let arglen = args.len().clone();
+    //println!("Argumentslengt:{}",&arglen);
+    let mut i = 0;
+    for givenarg in args.clone() {
+
+            //println!("env:{}",&givenarg);
+            let v = "".to_owned() + &givenarg.to_owned();
+            let key ="cmdarg".to_owned() + &i.to_string();
+vmap.setvar(key, &v);
+
+            newargs.push(v);
+        i +=1;
+
+
+    }
+    for _ in 0..10{
+        //println!("empty args");
+        newargs.push("".to_owned());
+
+    }
+    let mut initscript = NC_SCRIPT_DIR.to_owned() +"system/init.nc";
+    let mut runinit = false;
+    if args.len() > 2 {
+        initscript = args[2].to_owned();
+        if args[1] == "run" {
+            runinit = true;
+        }
+    }
+
+
     //let mut engine = Engine::new().expect("win");
     let mut engine = Engine::new_config(WindowDescriptor { width: 1920, height: 1080, title: "Nscript&BlueEngine Testing",..Default::default()}).expect("win");
 
@@ -178,10 +220,19 @@ let mut animationsystem = Ncanimation::new();
     //sleep(5000);
     let speed = -0.05;
 
+    // exent nscript core functions with blueengine functions!
+    vmap.setextentionfunctions(nscript_bluenc_functionbindings);
 
-    let serverscriptfilename = NC_SCRIPT_DIR.to_owned() +"system/BENC.nc";
-    nscript_execute_script(&serverscriptfilename,"","","","","","","","","",&mut vmap);
+    if runinit{
+        nscript_execute_script(&initscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
 
+    }else{
+    // allows a envoiremental variable ( default: home/nscript)
+        let coreinitscript ="".to_owned() +  NC_SCRIPT_DIR + "system/BENC.nc";
+        nscript_execute_script(&coreinitscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
+
+
+    }
 
     let objectsettignslayer1 = ObjectSettings {
         camera_effect: false,
@@ -274,7 +325,7 @@ vmap.setvar("blueengine.textureload_q".to_owned(),"" );
                 object.set_render_order(0).unwrap();
 
                 object.set_scale(0.5, 0.5, 1f32);
-                object.set_translation(0.0,0.0,-10.0);
+                object.set_position(0.0,0.0,-10.0);
 
     });           //layer1.flag_as_changed();
             //println!("bmpfont {}",i);
@@ -293,22 +344,23 @@ vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
                 &mut engine.renderer,
             &mut engine.objects,
         );
-            engine.objects.update_object(i, |object| {
-                object.set_render_order(1).unwrap();
-
-                //object.set_scale(0.5, 0.5, 1f32);
-                object.set_translation(0.0,0.0,-10.0);
-
-    });
+    //         engine.objects.update_object(i, |object| {
+    //             object.set_render_order(1).unwrap();
+    //
+    //             //object.set_scale(0.5, 0.5, 1f32);
+    //             object.set_position(0.0,0.0,-10.0);
+    //
+    // });
         }
     }
 vmap.setvar("blueengine.square_q".to_owned(),"" );
+
     // set positions quee
     for i in split(&nscript_checkvar("blueengine.position_q", &mut vmap),NC_ARRAY_DELIM){
         //cwrite(&i,"green");
         if i != "" {
             let data = split(&i,",");
-            if data.len() > 2 {
+            if data.len() > 3 {
                 //cwrite(&i,"yellow");
                 engine
                     .objects
@@ -332,7 +384,7 @@ vmap.setvar("blueengine.position_q".to_owned(),"" );
                 if i != ""{ // if queed items in pool
 
                     let data = split(&i,",");
-                    if data.len() > 0  && data[0] != ""{
+                    if data.len() > 1  && data[0] != ""{
                 //cwrite(&i,"m");
                         engine.objects
                             .get_mut(data[0])
@@ -351,8 +403,26 @@ vmap.setvar("blueengine.position_q".to_owned(),"" );
             }
 vmap.setvar("blueengine.textureset_q".to_owned(),"" );
 
+    for i in split(&nscript_checkvar("blueengine.update_q", &mut vmap),NC_ARRAY_DELIM){
+        //cwrite(&i,"green");
+        if i != "" {
+            let prop = i.to_owned() + ".x";
+            let newx = nscript_checkvar(&prop,&mut vmap);
+            let prop = i.to_owned() + ".y";
+            let newy = nscript_checkvar(&prop,&mut vmap);
+            let prop = i.to_owned() + ".z";
+            let newz = nscript_checkvar(&prop,&mut vmap);
 
-    cwrite(&nscript_checkvar("blueengine.squarequee", &mut vmap),"red");
+                engine
+                    .objects
+                    .get_mut(i)
+                    .unwrap()
+                    .set_position(newx.parse().unwrap_or(0.0), newy.parse().unwrap_or(0.0), newz.parse().unwrap_or(0.0));
+
+        }
+    }
+vmap.setvar("blueengine.update_q".to_owned(),"" );
+    //cwrite(&nscript_checkvar("blueengine.squarequee", &mut vmap),"red");
 
 // key mapping, used inside game_loop for bridging to nscript
     let keyvec = [
@@ -436,58 +506,7 @@ let mut animationtimer= Ntimer::init();
 
     engine
         .update_loop(move |renderer, window, objects, input, camera, plugins| {
-      let cube_vertices = vec![
-        // Front face
-        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, 1.0] },
-        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, 1.0] },
-        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, 1.0] },
-        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, 1.0] },
 
-        // Back face
-        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 0.0, -1.0] },
-        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 1.0], normal: [0.0, 0.0, -1.0] },
-        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [0.0, 0.0, -1.0] },
-        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 0.0, -1.0] },
-
-        // Top face
-        Vertex { position: [1.0, 1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, 1.0, 0.0] },
-        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, 1.0, 0.0] },
-        Vertex { position: [-1.0, 1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, 1.0, 0.0] },
-        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, 1.0, 0.0] },
-
-        // Bottom face
-        Vertex { position: [1.0, -1.0, -1.0], uv: [1.0, 0.0], normal: [0.0, -1.0, 0.0] },
-        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [0.0, -1.0, 0.0] },
-        Vertex { position: [-1.0, -1.0, 1.0], uv: [0.0, 1.0], normal: [0.0, -1.0, 0.0] },
-        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 0.0], normal: [0.0, -1.0, 0.0] },
-
-        // Left face
-        Vertex { position: [-1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [-1.0, 0.0, 0.0] },
-        Vertex { position: [-1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [-1.0, 0.0, 0.0] },
-        Vertex { position: [-1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [-1.0, 0.0, 0.0] },
-        Vertex { position: [-1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [-1.0, 0.0, 0.0] },
-
-        // Right face
-        Vertex { position: [1.0, 1.0, 1.0], uv: [1.0, 0.0], normal: [1.0, 0.0, 0.0] },
-        Vertex { position: [1.0, -1.0, 1.0], uv: [1.0, 1.0], normal: [1.0, 0.0, 0.0] },
-        Vertex { position: [1.0, -1.0, -1.0], uv: [0.0, 1.0], normal: [1.0, 0.0, 0.0] },
-        Vertex { position: [1.0, 1.0, -1.0], uv: [0.0, 0.0], normal: [1.0, 0.0, 0.0] },
-    ];
-        // Define indices for the cube
-    let cube_indices = vec![
-        // Front face
-        0, 1, 2, 0, 2, 3,
-        // Back face
-        4, 5, 6, 4, 6, 7,
-        // Top face
-        8, 9, 10, 8, 10, 11,
-        // Bottom face
-        12, 13, 14, 12, 14, 15,
-        // Left face
-        16, 17, 18, 16, 18, 19,
-        // Right face
-        20, 21, 22, 20, 22, 23,
-    ];
             let egui_plugin = plugins[0]
                 // downcast it to obtain the plugin
                 .downcast_mut::<egui::EGUI>()
@@ -507,8 +526,8 @@ let mut animationtimer= Ntimer::init();
                             //println!("this menu{} title:{}",eachmenu,title);
                             gui::Window::new(&title).show(ctx, |ui| {
                                 let controllarr = arraysearch(&Nstring::replace(&vmap.inobj(&eachmenu),"|",NC_ARRAY_DELIM),"type_");
-                                // let fpsmsg = "fps:".to_owned() + &vmap.getvar("fps") ;
-                                // ui.label(&fpsmsg);
+                                 //let fpsmsg = "fps:".to_owned() + &vmap.getvar("fps") ;
+                                 //ui.label(&fpsmsg);
 
                                 //println!("inobj:{}",controllarr);
                                 for eachcontrol in split(&controllarr,NC_ARRAY_DELIM){
@@ -554,6 +573,7 @@ let mut animationtimer= Ntimer::init();
                                                 let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
 
                                                 let arrayitems = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "func_"),&mut vmap);
+                                                let arrayitems = nscript_checkvar(&arrayitems,&mut vmap);
                                                 let selidvarname = Nstring::replace(&eachcontroltype, "type_", "selected_");
                                                 let selidval = nscript_checkvar(&selidvarname,&mut vmap);
                                                 let selid = nscript_checkvar(&selidval,&mut vmap);
@@ -603,6 +623,8 @@ let mut animationtimer= Ntimer::init();
                                                 let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
 
                                                 let arrayitems = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "func_"),&mut vmap);
+
+                                                let arrayitems = nscript_checkvar(&arrayitems,&mut vmap);
                                                 let selidvarname = Nstring::replace(&eachcontroltype, "type_", "selected_");
                                                 let selid = nscript_checkvar(&selidvarname,&mut vmap);
                                                 let mut selected = match selid.parse::<usize>(){
@@ -615,6 +637,9 @@ let mut animationtimer= Ntimer::init();
                                                 };
                                                 let alternatives = split(&arrayitems,NC_ARRAY_DELIM);
                                                 //let mut selected = 0;
+                                                if selected >= alternatives.len(){
+                                                    selected = alternatives.len() - 1;
+                                                }
                                                 gui::ComboBox::from_label(&inputvar).show_index(
                                                     ui,
                                                     &mut selected,
@@ -684,13 +709,36 @@ let mut animationtimer= Ntimer::init();
 
                                                 }
                                             }
-                                            "file" =>{
+                                            "fileopen" =>{
 
 
                                                 let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
 
                                                 if ui.button(&inputname).clicked() {
                                                     if let Some(path) = rfd::FileDialog::new().pick_file() {
+
+                                                        let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
+                                                        let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                        let mut inputvar = nscript_checkvar(&inputvar,&mut vmap);// get actualvalue!
+                                                        vmap.setvar(inputvarname,&format!("{:?}",path));
+                                                        let inputvarname = Nstring::replace(&eachcontroltype, "type_", "func_");
+                                                        let mut fnvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
+                                                        //let mut fnvar = nscript_checkvar(&fnvar,&mut vmap);// get actualvalue!
+                                                        let nscriptfunctiontorun = "".to_owned() + &fnvar + "(" + &format!("{:?}",path) +")";
+                                                        //println!("file - >{}",nscriptfunctiontorun);
+                                                        nscript_func(&nscriptfunctiontorun,&mut vmap);
+
+                                                    }
+
+                                                }
+                                            }
+                                            "filesave" =>{
+
+
+                                                let mut inputname = nscript_checkvar(&Nstring::replace(&eachcontroltype, "type_", "control_"),&mut vmap);
+
+                                                if ui.button(&inputname).clicked() {
+                                                    if let Some(path) = rfd::FileDialog::new().save_file() {
 
                                                         let inputvarname = Nstring::replace(&eachcontroltype, "type_", "var_");
                                                         let mut inputvar = nscript_checkvar(&inputvarname,&mut vmap);//evaluate the variablename
@@ -828,6 +876,22 @@ let mut animationtimer= Ntimer::init();
             // run all nscript loops , (quees be filled here and bridged to the render engine)
             nscript_loops(&mut vmap);
             vmap.setvar("key.event".to_owned(),"false");
+
+            //
+            let qbuffer = nscript_checkvar("blueengine.deletion_q", &mut vmap);
+            for i in split(&qbuffer,NC_ARRAY_DELIM){
+                if i != ""{ // if queed items in pool
+
+                    objects.remove(i);
+
+                    // remove the entree from the pool
+                    //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
+
+                }
+            }
+            vmap.setvar("blueengine.deletion_q".to_owned(),"");//clearpool
+
+
             for i in split(&nscript_checkvar("blueengine.bmpfont_q", &mut vmap),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
                 //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                 if  i != ""{
@@ -889,13 +953,13 @@ let mut animationtimer= Ntimer::init();
                         ObjectSettings::default(),
                         renderer
                     );
-                    let layer1 = objects
-                        .get_mut(i)
-                        .expect("failed to gete object");
+                    // let layer1 = objects
+                    //     .get_mut(i)
+                    //     .expect("failed to gete object");
 
-                    layer1.set_render_order(1).unwrap();
+                    //layer1.set_render_order(1).unwrap();
                     //layer1.camera_effect = false;
-                    layer1.flag_as_changed();
+                    //layer1.flag_as_changed();
                     //println!("sqaure {}",i);
                 }
             }
@@ -920,6 +984,8 @@ vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
                 }
             }
 vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
+
+
 
             for i in split(&nscript_checkvar("blueengine.square_q", &mut vmap),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
                 //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
@@ -955,6 +1021,8 @@ vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
                         let thisobj = objects
                             .get_mut(i)
                             .expect("Error getting ref");
+                    //let splitdata = split(i,",");
+
                     //thisobj.set_position(0.0,0.0,-5.0);
                     //println!("sqaure {}",i);
                 }
@@ -1063,7 +1131,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
                             object.set_position(data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0), data[3].parse().unwrap_or(0.0))
 
-                        });;
+                        });
                     }
                     else{
                         cwrite("Split error on the position quee","red")
@@ -1075,6 +1143,8 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             }
             vmap.setvar("blueengine.position_q".to_owned(),"");
 
+
+
             // Bridge: Nscript rotation Quee handler.
             // in nscript class blueengine.roation_q is used by func blueengine.setrotatation()
             let qbuffer = nscript_checkvar("blueengine.rotation_q", &mut vmap);
@@ -1083,6 +1153,44 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                     //println!("debug:{}",i);
                     let data = split(&i,",");
                     if data.len() > 2 {// check obj,x,y,z
+                        let tcurrent = data[0].to_owned() + ".r" + data[2];
+                        let tmpcurrotated = match nscript_checkvar(&tcurrent,&mut vmap).parse::<f32>(){
+                            Ok(res) =>{
+                                res
+                            }
+                            Err(err) => {
+                                //println!("[Bluenc] Error on the rotation Q (tmpcurrent) cannot convert string to f32 {}",i);
+                                0.0
+
+                            }
+
+                        };
+                        let thas = data[0].to_owned() + ".hr" + data[2];
+                        let tmphasrotated = match nscript_checkvar(&thas,&mut vmap).parse::<f32>(){
+                            Ok(res) =>{
+                                res
+                            }
+                            Err(err) => {
+                                //println!("[Bluenc] Error on the rotation Q (hasrotateD) cannot convert string to f32 {}",i);
+                                0.0
+
+                            }
+
+                        };
+
+                        let datatoset = match data[1].parse::<f32>(){
+                            Ok(res) =>{
+                                res
+                            }
+                            Err(err) => {
+                                println!("[Bluenc] Error on the rotation Q cannot convert string to f32 {}",i);
+                                0.0
+
+                            }
+                        };
+                        let torotate = 0.0 - tmphasrotated + datatoset;
+                        vmap.setvar(thas,&datatoset.to_string());
+                        vmap.setvar(tcurrent,data[1]);
                         let axis = match data[2]{
                             "x" => {
                                 RotateAxis::X
@@ -1093,16 +1201,20 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                             "z" => {
                                 RotateAxis::Z
                             }
-                            _ => RotateAxis::X
+                            _ => {
+                                println!("error on the split rotation_q  data={}",i);
+                                RotateAxis::X
+                            }
                         };
                         objects
                             .get_mut(data[0])
                             .unwrap()
-                            .set_rotatation(data[1].parse().unwrap_or(0.0), axis);
+                            .set_rotatation(torotate, axis);
 
                     }
                     else{
-                        cwrite("Split error on the rotation quee ","red")
+                        cwrite("Split error on the rotation quee","red");
+                        cwrite(i,"r");
                     }
                     // remove the entree from the pool ( in nscript blueengine.position_quee )
                     //vmap.setvar("blueengine.rotation_q".to_owned(),&poolremove(&qbuffer,&i) );//clearpool
@@ -1142,20 +1254,6 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             vmap.setvar("blueengine.camera_q".to_owned(),"");//clearpool
 
 
-            //
-            let qbuffer = nscript_checkvar("blueengine.deletion_q", &mut vmap);
-            for i in split(&qbuffer,NC_ARRAY_DELIM){
-                if i != ""{ // if queed items in pool
-
-                    objects.remove(i);
-
-                    // remove the entree from the pool
-                    //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
-
-                }
-            }
-            vmap.setvar("blueengine.deletion_q".to_owned(),"");//clearpool
-
             // Keyboard-input bridge , registers key.* classproperties to down or up
             let mut idx = 0;
             for xkey in keyname{
@@ -1186,7 +1284,7 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             vmap.setvar("blueengine.anim_q".to_owned(),"");//clearpool
 
             if Ntimer::diff(animationtimer) > 100 {
-                                for sprite in split(&vmap.getvar("animationhandler.allsprites"),NC_ARRAY_DELIM){
+                for sprite in split(&vmap.getvar("animationhandler.allsprites"),NC_ARRAY_DELIM){
                     let thisanim = animationsystem.frame(&sprite);
                     if thisanim != ""{
                         objects
@@ -1198,7 +1296,27 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                 }
                 animationtimer = Ntimer::init();
             }
+            for i in split(&nscript_checkvar("blueengine.update_q", &mut vmap),NC_ARRAY_DELIM){
+                //cwrite(&i,"green");
+                if i != "" {
 
+                    let prop = i.to_owned() + ".x";
+                    let newx = nscript_checkvar(&prop,&mut vmap);
+                    let prop = i.to_owned() + ".y";
+                    let newy = nscript_checkvar(&prop,&mut vmap);
+                    let prop = i.to_owned() + ".z";
+                    let newz = nscript_checkvar(&prop,&mut vmap);
+
+
+                    objects
+                        .get_mut(i)
+                        .unwrap()
+                        .set_position(newx.parse().unwrap_or(0.0), newy.parse().unwrap_or(0.0), newz.parse().unwrap_or(0.0));
+                    //println!("u {} x {} y {} z {}",i,newx,newy,newz);
+
+                }
+            }
+            vmap.setvar("blueengine.update_q".to_owned(),"" );
             //reset nscript property
         })
         .expect("Error during update loop");

@@ -10,7 +10,6 @@ class blueengine{
         else{
             toset = cat posx "," posy "," posz
         }
-        
         self.camera_q = pooladd(self.camera_q,toset)
     }
     func setanim(id,animarray){
@@ -20,12 +19,23 @@ class blueengine{
     func addsquare(id,texture){
         if id == "" return
         self.square_q = pooladd(self.square_q,id)
+        *id.x = 0
+        *id.y = 0
+        *id.z = 0
+        *id.rx = 0
+        *id.ry = 0
+        *id.rz = 0
+        *id.sx = 10
+        *id.sy = 10
+        *id.sz = 0
     }
-    func bmpfont(id){
-        
+
+    func bmpfont(id){     
         self.bmpfont_q = pooladd(self.bmpfont_q,id)
     }
+
     func addtexture(fileloc){
+        eval = stringtoeval(fileloc)
         if fileloc = "" return
         self.textureload_q = pooladd(self.textureload_q,fileloc)
     }
@@ -43,36 +53,54 @@ class blueengine{
         obj = combine(object,",",argb)
         self.color_q = pooladd(self.color_q,obj)
     }
+
     func delete(object){
         if object == "" return
         self.deletion_q = pooladd(self.deletion_q,object)
     }
 
     func setposition(object,posx,posy,posz){
-        if object = "" or object = self{
+        if object = "" || object = self{
             return false
         }
-        //print(cat("debug - setpos:",object),"r")
+        *object.x = posx
+        *object.y = posy
+        *object.z = posz
         toset = combine(object,",",posx,",",posy,",",posz)
-        self.position_q = pooladd(self.position_q,toset);
-        //print(toset)
+        self.position_q = pooladd(self.position_q,toset)
     }
 
     func setscale(object,posx,posy,posz){
         if obj = "" return false
+        *object.sx = posx
+        *object.sy = posy
+        *object.sz = posz
         toset = combine(object,",",posx,",",posy,",",posz)
-        self.scale_q = pooladd(self.scale_q,toset);
+        self.scale_q = pooladd(self.scale_q,toset)
     }
 
     func setrotation(object,rotation,axis){
         if axis != "x" && axis != "y" &&  axis != "z" || object == blueengine{
             return false
         }
+
+        // translate the rotation..
+        //yeah to keep the .props we gotta keep translating, as the BE rotates it instead of sets it
+        // but this way we can just set it.
+        tempaxis = cat("r",axis)
+        //tempaxis2 = cat("hr",axis)
+
+        //torotate = math 0 - *object.*tempaxis2 + rotation
+        //*object.*tempaxis2 = rotation
+
+
+        //*object.*tempaxis = rotation
         toset = combine(object,",",rotation,",",axis,",")
-        self.rotation_q = pooladd(self.rotation_q,toset);
+        self.rotation_q = pooladd(self.rotation_q,toset)
     }
 
     func construct(){
+        blueengine_textures = "blueengine_textures"
         self.square_q = ""
         self.textureload_q = ""
         self.textureset_q = ""
@@ -81,7 +109,13 @@ class blueengine{
         self.camera_q = ""
         self.deletion_q = ""
         self.anim_q = ""
-        blueengine_textures = "blueengine_textures"
+        isdir = print(listdir("./resources/map/"),"p")
+        for xt in isdir{
+            if xt != ""{
+                self.addtexture(cat("resources/map/",xt))
+            }
+        }
+        
         bmpfontdir = listdir("./resources/bmpfont/rng_white/")
         for x in bmpfontdir{
             if x != ""{
@@ -89,8 +123,16 @@ class blueengine{
                 //print(cat("bmpfonts:",x))
             }
         }
+        moretextures = listdir(cat(@nscriptpath,"/blueengine/resources/map"))
+        for x in moretextures{
+            if x != ""{
+                self.addtexture(cat(@nscriptpath,"/blueengine/resources/map",x))
+                //print(cat("bmpfonts:",x))
+            }
+        }
         textures = [
             "resources/img2.png",
+            "resources/blood.png",
             "resources/image.png",
             "resources/player.png",
             "resources/testimg.png",
@@ -109,67 +151,14 @@ class blueengine{
                 self.addtexture(cat("resources/bmpfont/rngwhite",xt))
             }
         }
+        //self.addtexture("/home/skorm/ramdisk_home/nc.jpg")
 
+            loadtimerdiff = timerdiff(loadtimer)
+            cwrite(cat("Loaded time:",loadtimerdiff),"g")
+            ref = "blueengine_textures.resources_testimg_png"
+            blueengine.addsquare("cursor").setposition("cursor",0.0,0.0,10.0).settexture("cursor",ref)
 
-        self.addsquare("main")
-        self.addsquare("alt")
-        self.addsquare("alt2")
-
-
-        setx = 0
-        sety = 0
-        loadtimer = timerinit()
-        tox = 2500
-        cwrite(cat("loading ",tox," sqaures started"),"g")
-        for x to tox{
-            thisobj = cat("square_",x)
-            blueengine.addsquare(thisobj)
-
-            match setx{
-                4 => {
-                    ref = "blueengine_textures.resources_grass_road_up_png"
-                }
-                8 => {
-                    ref = "blueengine_textures.resources_grass_road_up_png"
-                }
-                _ => {
-                    ref = "blueengine_textures.resources_grass1_png"
-                }
-
-            }
-            if sety == -14 or sety == - 8 {
-                ref = "blueengine_textures.resources_grass_road_side_png"
-            }
-            if setx == 14 or setx == 8 {
-                ref = "blueengine_textures.resources_grass_road_up_png"
-            }
-            blueengine.settexture(thisobj,ref)
-            blueengine.setposition(thisobj,math("setx - 25"),math("sety + 20"))
-            setx = math setx + 2
-            if setx > 80 {
-                setx = 0
-                sety = math sety - 2
-            }
-        }
-        loadtimerdiff = timerdiff(loadtimer)
-        cwrite(cat("Loaded time:",loadtimerdiff),"g")
-        blueengine.addsquare("cursor").setposition("cursor",0.0,0.0,10.0)
-        ref = "blueengine_textures.resources_testimg2_png"
-        blueengine.settexture("cursor",ref)
-        //blueengine.bmpfont("fonttest").settexture("fonttest","blueengine_textures.resources_grass1_png").setposition("fonttest",20,10,-10).setscale("fonttest",0.1,0.1,10.0)
-
-    }
-    func pr(msg){
-        print(cat("prr:","kaas",msg),"m")
-    }
-}
-
-class colissions{
-    func get(pointx,pointy,pointz){
-        tx = splitselect(pointx,".",0)
-        ty = splitselect(pointy,".",0)
-        tz = splitselect(pointz,".",0)
-        colissionpoint = replace(cat(tx,"_",ty,"_",tz),"-","m"))
-        return colissionpoint
+            //blueengine.bmpfont("fonttest").settexture("fonttest","blueengine_textures.resources_grass1_png").setposition("fonttest",20,10,-10).setscale("fonttest",0.1,0.1,10.0)
+       
     }
 }

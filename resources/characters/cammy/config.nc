@@ -1,0 +1,25 @@
+class cammy : sprite{
+    self.anim_right = [100,11,12,13,14,15,16]
+    self.anim_left = [100,17,18,19,20,21,22]
+    self.anim_idleleft = [100,6,7,8,9,10]
+    self.anim_idleright = [100,1,2,3,4,5]
+    self.anim_runleft = [100,11,12,13,14,15,16]
+    self.anim_runright = [100,17,18,19,20,21,22]
+    self.anim_fallright = [100,34,35]
+    self.anim_fallleft = [100,39,40]
+    self.anim_jumpleft = [100,36,37,38]
+    self.anim_jumpright = [100,31,32,33]
+    self.anim_attack1right = [100,23,24,25,26]
+    self.anim_attack1left = [100,27,28,29,30]
+    self.anim_attack2right = [100,41,42,43]
+    self.anim_attack2left = [100,44,45,46]
+    self.anim_attack3right = [100,47,48,49,50,51]
+    self.anim_attack3left = [100,57,58,59,60,61]
+    self.anim_attack4left = [100,52,53,54,55,56]
+    self.anim_attack4right = [100,52,53,54,55,56]// same as left
+    self.anim_jumpattack1left = [100,64,65]
+    self.anim_jumpattack1right = [100,62,63]
+    self.anim_jumpattack2left = [100,66,67]
+    self.anim_jumpattack2right = [100,68,69]   
+}
+
