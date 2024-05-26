@@ -18,7 +18,7 @@ impl Bn3models{
 
         //pool to hold the quad parts on as a object
         let objectparts = objectname.to_owned() + ".parts";
-        let mut objectpartpool = vmap.getvar(&objectparts);
+        let mut objectpartpool = "".to_owned();//vmap.getvar(&objectparts);
 
         for parts in split(&filedata,"\n"){
             let quadparts = split(parts,",");

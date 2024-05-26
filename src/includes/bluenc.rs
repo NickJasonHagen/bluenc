@@ -315,6 +315,45 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
     let param9 = vmap.param9.clone();
 
     match funcname {
+        "spriteload" => {
+            return Bluenc::spriteload(&param1, &param2, vmap);
+        }
+        "spritesetanimation" =>{
+             Bluenc::spritesetanimation(&param1, &param2, vmap);
+        }
+        "spritegetanimations" => {
+            return Bluenc::spritegetanimations(&param1,vmap);
+        }
+        "nodespawnsquare" => {
+            return  Bluenc::nodespawnsquare(&param1, &nscript_f64(&param2), &nscript_f64(&param3), &nscript_f64(&param4), vmap);
+
+        }
+        "nodesetposition" => {
+            Bluenc::nodesetposition(&param1, &nscript_f64(&param2),&nscript_f64(&param3),&nscript_f64(&param4),vmap);
+        }
+        "nodesetrotation" => {
+            Bluenc::nodesetrotation(&param1, &nscript_f64(&param2),&nscript_f64(&param3),&nscript_f64(&param4),vmap);
+        }
+        "nodesetscale" => {
+            Bluenc::nodesetscale(&param1, &nscript_f64(&param2),&nscript_f64(&param3),&nscript_f64(&param4),vmap);
+        }
+        "camerasetposition" => {
+            Bluenc::camerasetposition(&nscript_f64(&param1), &nscript_f64(&param2), &nscript_f64(&param3), &nscript_f64(&param4), &nscript_f64(&param5), &nscript_f64(&param6), vmap);
+        }
+        "nodedelete" =>{
+            Bluenc::nodedelete(&param1, vmap);
+
+        }
+        "nodegetposition" =>{
+            return Bluenc::nodegetposition(&param1, vmap);
+        }
+        "nodegetrotation" =>{
+            return Bluenc::nodegetrotation(&param1, vmap);
+        }
+        "nodegetscale" =>{
+            return Bluenc::nodegetscale(&param1, vmap);
+        }
+
         "bn3load" => {
             Bn3models::loadmodel(&param1,&param2, vmap);
             return "ok".to_owned();
@@ -333,9 +372,70 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
             testrotate(&forobj,&fl64, &vmap.param3.clone(),vmap);
             return vmap.param1.to_owned();
         }
+        "textureload" =>{
+            return Bluenc::textureload(&param1, vmap);
+        }
+        "textureset" => {
+            Bluenc::textureset(&param1,&param2,vmap);
+        }
+        "nodesetcolor" => {
+            let getq = vmap.getvar("blueengine.color_q");
+            if param1 != "" && param2 != ""{
+                let colorstring = "".to_owned() + &param1 + "," + &param2;
+                vmap.setvar("blueengine.color_q".to_owned(), &colorstring);
+            }
+        }
+        "image2d" => {
+            return Bluenc::image2d(&param1, &nscript_f64(&param2), &nscript_f64(&param3), &nscript_f64(&param4), vmap);
+        }
+        "eguiwindow" =>{
+            return Bluenc::eguiwindow(&param1, &param2, vmap);
+        }
+        "eguiclosewindow" =>{
+            Bluenc::eguiclose(&param1, vmap);
+        }
+        "eguiopenwindow" => {
+            Bluenc::eguiopen(&param1, vmap);
+        }
+        "eguibutton" => {
+            Bluenc::eguibutton(&param1, &param2, &param3, vmap);
+        }
+        "eguilabel" => {
+            Bluenc::eguilabel(&param1, &param2, &param3, vmap);
+        }
+        "eguihyperlink" => {
+            Bluenc::eguihyperlink(&param1, &param2, &param3, vmap);
+        }
+        "eguiinput" => {
+            Bluenc::eguiinput(&param1, &param2, &param3, vmap)
+        }
+        "eguicheckbox" => {
+            Bluenc::eguicheckbox(&param1, &param2, &param3, vmap)
+        }
+        "eguicolorpicker" => {
+            Bluenc::eguicolorpicker(&param1, &param2, &param3, vmap)
+        }
+        "eguisavefilebutton" => {
+            Bluenc::eguisavefilebutton(&param1, &param2, &param3, &param4, vmap)
+        }
+        "eguiopenfilebutton" => {
+            Bluenc::eguiopenfilebutton(&param1, &param2, &param3, &param4, vmap)
+        }
+        "eguislider" => {
+            Bluenc::eguislider(&param1, &param2, &param3, &param4, &param5, vmap)
+        }
+        "eguiradio" => {
+            Bluenc::eguiradio(&param1, &param2, &param3, &param4, vmap)
+        }
+        "eguicombo" => {
+            Bluenc::eguicombo(&param1, &param2, &param3, &param4, vmap)
+        }
+
+
         _ =>{
+            return "".to_owned();
         }
     }
-    "".to_owned() // if no match continue core mappings.
+    "ok".to_owned() // if no match continue core mappings.
 
 }
