@@ -11,7 +11,7 @@ use blue_engine::{
 //use blue_engine_egui::egui as gui;
 use blue_engine_utilities::egui;
 use blue_engine_utilities::egui::egui as gui;
-use std::env;
+use std::{char, env, net::SocketAddrV4};
 mod includes{
     pub mod bluenc;
     pub mod maps;
@@ -204,17 +204,52 @@ vmap.setvar(key, &v);
     }
 
 
+    // exent nscript core functions with blueengine functions!
+    vmap.setextentionfunctions(nscript_bluenc_functionbindings);
+
+    if runinit{
+        nscript_execute_script(&initscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
+
+    }else{
+    // allows a envoiremental variable ( default: home/nscript)
+        let coreinitscript ="".to_owned() +  NC_SCRIPT_DIR + "system/BENC.nc";
+        nscript_execute_script(&coreinitscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
+
+
+    }
+
+
     //let mut engine = Engine::new().expect("win");
     //let mut engine = Engine::new_config(WindowDescriptor { width: 1920, height: 1080, title: "Nscript&BlueEngine Testing",..Default::default()}).expect("win");
- let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
-         width: 720, height: 400, title: "Nscript&BlueEngine Testing",
-        power_preference: blue_engine::PowerPreference::LowPower,
-        present_mode: blue_engine::wgpu::PresentMode::Fifo,
+    let vsync = vmap.getvar("blueengine.vsync");
+    let powermode = vmap.getvar("blueengine.powermode");
+    let mut renderwidth = nscript_i32(&vmap.getvar("blueengine.renderwidth")) ;
+    let mut renderheight = nscript_i32(&vmap.getvar("blueengine.renderheight"));
+    let rendertitle = "static title needs to be fixed";
+    let cfgtitle = vmap.getvar("blueengine.title");
+    let mut cfgpowermode = blue_engine::PowerPreference::LowPower;
+    if powermode == "true" {
+       cfgpowermode = blue_engine::PowerPreference::HighPerformance;
+    }
+    let mut cfgvsync = blue_engine::wgpu::PresentMode::Fifo;
+    if vsync == "false" {
+        cfgvsync = blue_engine::wgpu::PresentMode::Immediate;
+    }
+    if renderwidth < 160 {
+        renderwidth = 160
+    }
+    if renderheight < 120 {
+        renderheight = 120
+    }
+    let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
+        width: renderwidth as u32, height: renderheight as u32, title: rendertitle,
+        power_preference: cfgpowermode,
+        present_mode: cfgvsync,
         features: blue_engine::header::imports::wgpu::Features::empty(),
         ..Default::default()
     })
     .expect("win");
-
+engine.window.set_title(&cfgtitle);
     //engine.window.title("BlueEngine-Nscript");
     cwrite("engine started!!","g");
     //let mut engine = ENGINE.lock().unwrap();
@@ -232,44 +267,29 @@ let mut animationsystem = Ncanimation::new();
     //animationsystem.get("test");
     //sleep(5000);
     let speed = -0.05;
-
-    // exent nscript core functions with blueengine functions!
-    vmap.setextentionfunctions(nscript_bluenc_functionbindings);
-
-    if runinit{
-        nscript_execute_script(&initscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
-
-    }else{
-    // allows a envoiremental variable ( default: home/nscript)
-        let coreinitscript ="".to_owned() +  NC_SCRIPT_DIR + "system/BENC.nc";
-        nscript_execute_script(&coreinitscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
-
-
-    }
-
     let objectsettignslayer1 = ObjectSettings {
         camera_effect: false,
         shader_settings: ShaderSettings::default(),
     };
 
-
+if 1 == 2 {// lets test if its only inside the loop..
     // quee system to load textures , ( first nodes can be used to copy to others)
     let queetest = nscript_checkvar("blueengine.textureload_q", &mut vmap);
      //println!("DEBUG!!!!!!!!!!!!!{}",&queetest);
     //cwrite(&nscript_checkvar("blueengine.textureload_q", &mut vmap),"p");
-    for i in split(&vmap.getvar("blueengine.textureload_q"),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
+    for i in vmap.getstringarray("blueengine.textureload_q"){//NC_ARRAY_DELIM
         let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
         if nscript_checkvar(&ckey, &mut vmap) == "" && i != ""{
             #[cfg(debug_assertions)]
             cwrite(&ckey,"green");
-            vmap.setvar("tmp".to_owned(),i);
+            vmap.setvar("tmp".to_owned(),&i);
             if i != "" {
                 //perform blue engine texture loading
                 let t = engine
                     .renderer
                     .build_texture(
                         ckey.clone(),
-                        TextureData::Path(i.to_owned()),
+                        TextureData::Path(i.to_string()),
                         blue_engine::TextureMode::Clamp,
                     )
                     .unwrap();
@@ -302,9 +322,10 @@ let mut animationsystem = Ncanimation::new();
             let m = "texture already exists:".to_owned() + &ckey;
             cwrite(&m,"r")
         }
+            vmap.setstringarray("blueengine.textureload_q",Vec::new() );
     }
-vmap.setvar("blueengine.textureload_q".to_owned(),"" );
-    for i in split(&vmap.getvar("blueengine.bmpfont_q"),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
+
+    for i in split(&vmap.getvar("blueengine.image2d_q"),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
         //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
         if  i != "" {
             engine.objects.new_object(
@@ -345,7 +366,7 @@ vmap.setvar("blueengine.textureload_q".to_owned(),"" );
             //println!("bmpfont {}",i);
         }
     }
-vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
+vmap.setvar("blueengine.image2d_q".to_owned(),"" );
 
     //:w
     //spanwning quee
@@ -371,7 +392,7 @@ vmap.setvar("blueengine.bmpfont_q".to_owned(),"" );
 vmap.setvar("blueengine.square_q".to_owned(),"" );
 
     // set positions quee
-    for i in split(&vmap.getvar("blueengine.position_q"),NC_ARRAY_DELIM){
+    for i in vmap.getstringarray("blueengine.position_q"){
         //cwrite(&i,"green");
         if i != "" {
             let data = split(&i,",");
@@ -386,16 +407,16 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
             }
             else{
                 cwrite("A split error on the position quee accuired","red");
-                cwrite(i,"red");
+                cwrite(&i,"red");
 
             }
         }
     }
-vmap.setvar("blueengine.position_q".to_owned(),"" );
+vmap.setstringarray("blueengine.position_q",Vec::new() );
 
             // Bridge: Nscript setTexture q.
-            let qbuffer = vmap.getvar("blueengine.textureset_q");
-            for i in split(&qbuffer,NC_ARRAY_DELIM){
+            let qbuffer = vmap.getstringarray("blueengine.textureset_q");
+            for i in qbuffer{
                 if i != ""{ // if queed items in pool
 
                     let data = split(&i,",");
@@ -416,9 +437,9 @@ vmap.setvar("blueengine.position_q".to_owned(),"" );
                     //vmap.setvar("blueengine.textureset_q".to_owned(),&poolremove(&qbuffer,&i) );
                 }
             }
-vmap.setvar("blueengine.textureset_q".to_owned(),"" );
+vmap.setstringarray("blueengine.textureset_q",Vec::new() );
 
-    for i in split(&vmap.getvar("blueengine.update_q"),NC_ARRAY_DELIM){
+    for i in vmap.getstringarray("blueengine.update_q"){
         //cwrite(&i,"green");
         if i != "" {
             let prop = i.to_owned() + ".x";
@@ -430,38 +451,35 @@ vmap.setvar("blueengine.textureset_q".to_owned(),"" );
 
                 engine
                     .objects
-                    .get_mut(i)
+                    .get_mut(&i)
                     .unwrap()
                     .set_position(newx.parse().unwrap_or(0.0), newy.parse().unwrap_or(0.0), newz.parse().unwrap_or(0.0));
 
         }
     }
 
-vmap.setvar("blueengine.update_q".to_owned(),"" );
+vmap.setstringarray("blueengine.update_q",Vec::new() );
 
-    for i in split(&vmap.getvar("blueengine.visibility_q"),NC_ARRAY_DELIM){
+    for i in split(&vmap.getvar("blueengine.visibility_q"), NC_ARRAY_DELIM) {
         //cwrite(&i,"green");
         if i != "" {
-            let isdata = split(i,",");
+            let isdata = split(i, ",");
             if isdata.len() > 1 {
                 let mut isvisbool = true;
                 if isdata[1] == "false" {
                     isvisbool = false;
                 }
-                let isobj = engine
-                    .objects
-                    .get_mut(isdata[0])
-                    .unwrap();
-                    isobj.is_visible = isvisbool;
-
+                let isobj = engine.objects.get_mut(isdata[0]).unwrap();
+                isobj.is_visible = isvisbool;
             }
         }
     }
 
-vmap.setvar("blueengine.visibility_q".to_owned(),"" );
+    vmap.setvar("blueengine.visibility_q".to_owned(), "");
+    }
     //cwrite(&nscript_checkvar("blueengine.squarequee", &mut vmap),"red");
 
-// key mapping, used inside game_loop for bridging to nscript
+    // key mapping, used inside game_loop for bridging to nscript
     let keyvec = [
         blue_engine::KeyCode::Escape,
         blue_engine::KeyCode::ArrowUp,
@@ -493,9 +511,10 @@ vmap.setvar("blueengine.visibility_q".to_owned(),"" );
         blue_engine::KeyCode::KeyW,
         blue_engine::KeyCode::KeyX,
         blue_engine::KeyCode::KeyY,
-        blue_engine::KeyCode::KeyZ,];
-    let keyname = [ // keymapping naming ( must contain the same size and order as the keymapping!!)
-
+        blue_engine::KeyCode::KeyZ,
+    ];
+    let keyname = [
+        // keymapping naming ( must contain the same size and order as the keymapping!!)
         "key.esc",
         "key.up",
         "key.down",
@@ -528,19 +547,21 @@ vmap.setvar("blueengine.visibility_q".to_owned(),"" );
         "key.y",
         "key.z",
     ];
-let mut animationtimer= Ntimer::init();
+    let mut animationtimer = Ntimer::init();
     let mut uiselfname = String::new();
 
-    let mut uiselfpath  = Some("".to_string());// String::new();
+    let mut uiselfpath = Some("".to_string()); // String::new();
     let mut uiselfage = 1;
-        // Start the egui context
-    let gui_context =
-        egui::EGUI::new( &mut engine.renderer, &engine.window);
+    // Start the egui context
+    let gui_context = egui::EGUI::new(&mut engine.renderer, &engine.window);
 
     // We add the gui as plugin, which runs once before everything else to fetch events, and once during render times for rendering and other stuff
-    engine.signals.add_signal("egui",Box::new(gui_context));
- let mut color = [1f32, 1f32, 1f32, 1f32];
-let codetimer = Instant::now();
+    engine.signals.add_signal("egui", Box::new(gui_context));
+    let mut color = [1f32, 1f32, 1f32, 1f32];
+    let mut fpscounter = 0;
+    let codetimer = Instant::now();
+    let mut fps = 0;
+    let mut fpstimer = Ntimer::init();
     engine
         .update_loop(move |renderer, window, objects, input, camera, signals| {
             let egui_signal =  signals.get_signal::<egui::EGUI>("egui").unwrap();
@@ -551,6 +572,13 @@ let codetimer = Instant::now();
                 // .expect("Plugin not found");
 
             // ui function will provide the context
+            fpscounter +=1;
+            if Ntimer::diff(fpstimer) > 999 {
+                fpstimer = Ntimer::init();
+                fps = fpscounter.clone();
+                vmap.setvar("blueengine.fps".to_string(),&fps.to_string());
+                fpscounter = 0;
+            }
             let eachmenu  = vmap.getvar("guiactivemenus");
 
 
@@ -693,8 +721,25 @@ let codetimer = Instant::now();
                                                 let mut inputname = vmap.getvar(&Nstring::replace(&eachcontroltype, "type_", "control_"));
 
 
-                                                password(&mut changedvar);
-                                                //println!("input name:{}",inputname);
+                                                ui.horizontal(|ui| {
+                                                    let name_label = ui.label(&inputname);
+                                                    //let field = ui::TextEdit::singleline(&mut changedvar);
+                                                    //let field = ui.text_edit_singleline(&mut changedvar);
+
+                                                    //ui.label(name_label);
+                                                    let textfield = ui.add_sized(
+                                                        [ui.available_width(), 24.],
+                                                        gui::TextEdit::singleline(&mut changedvar).password(true),
+                                                    );//.labelled_by(name_label.id);
+                                                    //(true);
+
+                                                    if changedvar != inputvar{
+                                                        vmap.setvar(originalvarname,&changedvar);
+                                                        //println!("nput:{}",inputvar);
+                                                    }
+
+                                                    //println!("input name:{}",inputname);
+                                                });
 
                                             }
                                             "input" =>{
@@ -915,12 +960,12 @@ let codetimer = Instant::now();
 
 
                 //
-                let qbuffer = vmap.getvar("blueengine.deletion_q");
-                if qbuffer != ""{
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.deletion_q");
+                if qbuffer.len() != 0{
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
 
-                            objects.remove(i);
+                            objects.remove(&i);
 
                             // remove the entree from the pool
                             //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
@@ -928,16 +973,16 @@ let codetimer = Instant::now();
                         }
                     }
                 }
-                vmap.setvar("blueengine.deletion_q".to_owned(),"");//clearpool
+                vmap.setstringarray("blueengine.deletion_q",Vec::new());//clearpool
 
-                let pngfontq = vmap.getvar("blueengine.pngfont_q");
-                if pngfontq != "" {
-                    for i in split(&pngfontq,NC_ARRAY_DELIM){//NC_ARRAY_DELIM
+                let pngfontq = vmap.getstringarray("blueengine.image2d_q");
+                if pngfontq.len() != 0 {
+                    for i in pngfontq{//NC_ARRAY_DELIM
                         //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                         if  i != ""{
 
                             objects.new_object(
-                                i,
+                                i.to_string(),
                                 vec![
                                     Vertex {
                                         position: [1.0, 1.0, 0.0],
@@ -966,26 +1011,26 @@ let codetimer = Instant::now();
                             );
 
                             let layer1 = objects
-                                .get_mut(i)
+                                .get_mut(&i)
                                 .expect("failed to gete object");
 
                             layer1.set_render_order(1).unwrap();
                             layer1.camera_effect = false;
                             //layer1.flag_as_changed();
-                            println!("sqaure {}",i);
+                            //println!("sqaure {}",i);
                         }
                     }
                 }
-vmap.setvar("blueengine.pngfont_q".to_owned(),"" );
+vmap.setstringarray("blueengine.image2d_q",Vec::new() );
 
-                let textureloadq = vmap.getvar("blueengine.textureload_q");
-                if textureloadq != ""{
-                    for i in split(&textureloadq,NC_ARRAY_DELIM){//NC_ARRAY_DELIM
+                let textureloadq = vmap.getstringarray("blueengine.textureload_q");
+                if textureloadq.len() != 0{
+                    for i in textureloadq{//NC_ARRAY_DELIM
                         let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                         if nscript_checkvar(&ckey, &mut vmap) == "" && i != ""{
                             #[cfg(debug_assertions)]
                             cwrite(&ckey,"green");
-                            vmap.setvar("tmp".to_owned(),i);
+                            vmap.setvar("tmp".to_owned(),&i);
                             if i != "" {
                                 //perform blue engine texture loading
                                 let t =
@@ -1021,13 +1066,13 @@ vmap.setvar("blueengine.pngfont_q".to_owned(),"" );
 
 
                         }
-                        else{
-                            let m = "texture already exists:".to_owned() + &ckey;
-                            cwrite(&m,"r")
-                        }
+                        // else{
+                        //     let m = "texture already exists:".to_owned() + &ckey;
+                        //     cwrite(&m,"r")
+                        // }
                     }
+                    vmap.setstringarray("blueengine.textureload_q",Vec::new() );
                 }
-                vmap.setvar("blueengine.textureload_q".to_owned(),"" );
 
                 let qbuffer = vmap.getvar("blueengine.bmpfonttextureset_q");
                 if qbuffer != ""{
@@ -1053,13 +1098,14 @@ vmap.setvar("blueengine.pngfont_q".to_owned(),"" );
                 vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
 
 
-                let qbuffer = vmap.getvar("blueengine.square_q");
-                if qbuffer != ""{
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){//NC_ARRAY_DELIM
+                let qbuffer = vmap.getstringarray("blueengine.square_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{//NC_ARRAY_DELIM
                         //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
                         if  i != ""{
                             objects.new_object(
-                                i,
+                                i.to_string(),
+
                                 vec![
                                     Vertex {
                                         position: [1.0, 1.0, 0.0],
@@ -1087,7 +1133,7 @@ vmap.setvar("blueengine.pngfont_q".to_owned(),"" );
                                 renderer
                             );
                             let thisobj = objects
-                                .get_mut(i)
+                                .get_mut(&i)
                                 .expect("Error getting ref");
                             //let splitdata = split(i,",");
 
@@ -1095,14 +1141,15 @@ vmap.setvar("blueengine.pngfont_q".to_owned(),"" );
                             //println!("sqaure {}",i);
                         }
                     }
+
+                    vmap.setstringarray("blueengine.square_q",Vec::new() );
                 }
-vmap.setvar("blueengine.square_q".to_owned(),"" );
 
 
                 // Bridge: Nscript setTexture q.
-                let qbuffer = vmap.getvar("blueengine.textureset_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.textureset_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
                             //println!("text:{}",i);
                             let data = split(&i,",");
@@ -1120,15 +1167,15 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                             //vmap.setvar("blueengine.textureset_q".to_owned(),&poolremove(&qbuffer,&i) );
                         }
                     }
+                    vmap.setstringarray("blueengine.textureset_q",Vec::new() );
                 }
-            vmap.setvar("blueengine.textureset_q".to_owned(),"" );
 
 
                 // Bridge: Nscript Scale Quee handler.
                 // in nscript class blueengine.roation_q is used by func blueengine.setscale()
-                let qbuffer = vmap.getvar("blueengine.scale_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.scale_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
 
                             let data = split(&i,",");
@@ -1153,12 +1200,12 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
                         }
                     }
+                    vmap.setstringarray("blueengine.scale_q",Vec::new() );
                 }
-            vmap.setvar("blueengine.scale_q".to_owned(),"" );
 
-                let qbuffer = vmap.getvar("blueengine.color_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.color_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
                             let data = split(&i,",");
                             if data.len() > 4 {
@@ -1186,15 +1233,15 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                                     .unwrap();
                             }
                         }
-            }
+                    }
+                    vmap.setstringarray("blueengine.color_q",Vec::new() );
                 }
-            vmap.setvar("blueengine.color_q".to_owned(),"" );
                 // Bridge: Nscript scale Quee handler.
                 // in nscript class blueengine.position_q is used by func blueengine.setposition()
 
-                let qbuffer = vmap.getvar("blueengine.position_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.position_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
 
                             let data = split(&i,",");
@@ -1217,16 +1264,16 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
                         }
                     }
+                    vmap.setstringarray("blueengine.position_q",Vec::new());
                 }
-                vmap.setvar("blueengine.position_q".to_owned(),"");
 
 
 
                 // Bridge: Nscript rotation Quee handler.
                 // in nscript class blueengine.roation_q is used by func blueengine.setrotatation()
-                let qbuffer = vmap.getvar("blueengine.rotation_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.rotation_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
                             //println!("debug:{}",i);
                             let data = split(&i,",");
@@ -1292,19 +1339,19 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                             }
                             else{
                                 cwrite("Split error on the rotation quee","red");
-                                cwrite(i,"r");
+                                cwrite(&i,"r");
                             }
                             // remove the entree from the pool ( in nscript blueengine.position_quee )
                             //vmap.setvar("blueengine.rotation_q".to_owned(),&poolremove(&qbuffer,&i) );//clearpool
 
                         }
                     }
+                    vmap.setstringarray("blueengine.rotation_q",Vec::new());
                 }
-            vmap.setvar("blueengine.rotation_q".to_owned(),"");
 
-            let qbuffer = vmap.getvar("blueengine.camera_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+            let qbuffer = vmap.getstringarray("blueengine.camera_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         if i != ""{ // if queed items in pool
                             let data = split(&i,",");
                             if data.len() > 2 {// check obj,x,y,z
@@ -1331,8 +1378,8 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
                         }
                     }
+                    vmap.setstringarray("blueengine.camera_q",Vec::new());//clearpool
                 }
-            vmap.setvar("blueengine.camera_q".to_owned(),"");//clearpool
 
 
             // Keyboard-input bridge , registers key.* classproperties to down or up
@@ -1349,10 +1396,10 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                 idx +=1;
             }
 
-                let qbuffer = vmap.getvar("blueengine.anim_q");
+                let qbuffer = vmap.getstringarray("blueengine.anim_q");
                 //println!("animq:{}",qbuffer);
-                if qbuffer != "" {
-                    for sprite in split(&qbuffer,NC_ARRAY_DELIM) {
+                if qbuffer.len() != 0 {
+                    for sprite in qbuffer {
                         if sprite != "" {
                             //println!("full: {}",sprite);
                             let spritesplit:Vec<String> = sprite.split("|").map(String::from).collect();
@@ -1363,25 +1410,28 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
                         }
 
                     }
+                    vmap.setstringarray("blueengine.anim_q",Vec::new());//clearpool
                 }
-            vmap.setvar("blueengine.anim_q".to_owned(),"");//clearpool
 
-            if Ntimer::diff(animationtimer) > 20 {
-                for sprite in split(&vmap.getvar("animationhandler.allsprites"),NC_ARRAY_DELIM){
-                    let thisanim = animationsystem.frame(&sprite);
-                    if thisanim != ""{
-                        objects
-                            .get_mut(sprite)
-                            .expect("Error during copying texture of the main square")
-                            .reference_texture(thisanim);
+                if Ntimer::diff(animationtimer) > 20 {
+                    let getq = vmap.getstringarray("animationhandler.allsprites");
+                    if getq.len() != 0 {
+                        for sprite in getq{
+                            let thisanim = animationsystem.frame(&sprite);
+                            if thisanim != ""{
+                                objects
+                                    .get_mut(&sprite)
+                                    .expect("Error during copying texture of the main square")
+                                    .reference_texture(thisanim);
 
+                            }
                         }
                     }
                     animationtimer = Ntimer::init();
                 }
-                let qbuffer = vmap.getvar("blueengine.update_q");
-                if qbuffer != "" {
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
+                let qbuffer = vmap.getstringarray("blueengine.update_q");
+                if qbuffer.len() != 0 {
+                    for i in qbuffer{
                         //cwrite(&i,"green");
                         if i != "" {
 
@@ -1394,23 +1444,389 @@ vmap.setvar("blueengine.square_q".to_owned(),"" );
 
 
                             objects
-                                .get_mut(i)
+                                .get_mut(&i)
                                 .unwrap()
                                 .set_position(newx.parse().unwrap_or(0.0), newy.parse().unwrap_or(0.0), newz.parse().unwrap_or(0.0));
                             //println!("u {} x {} y {} z {}",i,newx,newy,newz);
 
                         }
                     }
+                    vmap.setstringarray("blueengine.update_q",Vec::new() )
                 }
-            vmap.setvar("blueengine.update_q".to_owned(),"" );
+
+                let qbuffer = vmap.getstringarray("blueengine.textnode_q");
+                if qbuffer.len() != 0{
+
+                    for i in qbuffer{
+                        if i != ""{ // if queed items in pool
+                            let mut counter = 1;
+
+                            let prop = i.to_string() + ".text";
+                            let text = vmap.getvar(&prop);
+                            let prop = i.to_string() + ".x";
+                            let text_x = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".y";
+                            let text_y = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".size";
+                            let text_size = nscript_f32(&vmap.getvar(&prop));
+                            let scalewidth = text_size / 20.0;
+                            let scaleheight = text_size / 16.0;
+                            let mut distancebetweenchars: f32;
+                            distancebetweenchars = text_size / (1400.0 - (text_size * 21.0));
+
+                            let prop = i.to_string() + ".font";
+                            let usedfont = vmap.getvar(&prop);
+                            let mut setposx = text_x.clone();
+                            for xchar in split(&text,""){
+                                if xchar != "" {
+                                    let charnode = i.to_string() + "_textchar_" + &counter.to_string();
+                                    counter +=1;
+                                    objects.new_object(
+                                        charnode.clone(),
+                                        vec![
+                                            Vertex {
+                                                position: [1.0, 1.0, 0.0],
+                                                uv: [1.0, 0.0],
+                                                normal: [0f32, 0f32, 0f32],
+                                            },
+                                            Vertex {
+                                                position: [1.0, -1.0, 0.0],
+                                                uv: [1.0, 1.0],
+                                                normal: [0f32, 0f32, 0f32],
+                                            },
+                                            Vertex {
+                                                position: [-1.0, -1.0, 0.0],
+                                                uv: [0.0, 1.0],
+                                                normal: [0f32, 0f32, 0f32],
+                                            },
+                                            Vertex {
+                                                position: [-1.0, 1.0, 0.0],
+                                                uv: [0.0, 0.0],
+                                                normal: [0f32, 0f32, 0f32],
+                                            },
+                                        ],
+                                        vec![2, 1, 0, 2, 0, 3],
+                                        objectsettignslayer1,
+                                        renderer
+                                    );
+
+                                    let  mut layer1 = objects
+                                        .get_mut(&charnode)
+                                        .expect("failed to gete object");
+
+                                    layer1.set_render_order(1).unwrap();
+                                    layer1.camera_effect = false;
+                                    let textureprop = usedfont.to_string() + "." + &Bluenc::pngcharname(&xchar);
+
+                                    let texture = vmap.getvar(&textureprop);
+                                    objects
+                                        .get_mut(&charnode)
+                                        .expect("Error during copying texture of the main square")
+                                        .reference_texture(texture.clone());
+                                    vmap.setvar(charnode.to_string()+".texture",&texture);
+
+
+                                    objects
+                                        .get_mut(&charnode)
+                                        .unwrap()
+                                        .resize(scalewidth, scaleheight, 0.0,window.inner_size());
+                                    objects.update_object(&charnode[..], |object| {
+
+
+                                        object.set_scale(scalewidth,scaleheight,0.0);
+
+
+                                    });;
+                                    objects
+                                        .get_mut(&charnode)
+                                        .unwrap()
+                                        .set_position(setposx, text_y, nscript_f32("0.0"));
+
+                                    match xchar {// custom adjusting for characters
+                                        "1" | "i" | " " | "." | "," => {
+                                            setposx = setposx + (distancebetweenchars*0.6);
+                                        }
+                                        "f" | "t" =>{
+                                            setposx = setposx + (distancebetweenchars*0.8);
+                                        }
+
+                                        "y" | "z" | "x" | "d" | "u" | "r" | "s" | "o" | "c" | "a" =>{
+                                            setposx = setposx + (distancebetweenchars*1.05);
+                                        }
+                                        "w" | "\\" | "/" | "#" | "m" => {
+
+                                            setposx = setposx + (distancebetweenchars*1.25);
+                                        }
+                                        _ =>{
+                                            setposx = setposx + distancebetweenchars;
+                                        }
+                                    }
+                                    #[cfg(debug_assertions)]
+                                    println!("textnode {} char {} posx{}",&i,&charnode,&setposx);
+                               }
+                            }
+
+
+
+                            // remove the entree from the pool
+                            //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
+
+                            vmap.setvar(i.to_string()+".lenght",&counter.to_string());
+                        }
+                    }
+                    vmap.setstringarray("blueengine.textnode_q",Vec::new());//
+                }
+                let qbuffer = vmap.getstringarray("blueengine.textcolor_q");
+                if qbuffer.len() != 0{
+                    for i in qbuffer{
+                        if i != ""{ // if queed items in pool
+                            let key = i.to_string() + ".lenght";
+                            let getlenght = nscript_usize(&vmap.getvar(&key));
+
+                            let key = i.to_string() + ".color";
+                            let getcolor = vmap.getvar(&key);
+                            #[cfg(debug_assertions)]
+                            println!("colorq lenght={} color={}",&getlenght,&getcolor);
+
+                            for xchar in 1..getlenght{
+                                // create the nscript variable
+                                let charnode = i.to_string() + "_textchar_" + &xchar.to_string();
+                                let data = split(&getcolor,",");
+                                if data.len() > 3 {
+                                    let color1 = match data[0].parse::<f32>(){
+                                        Ok(r) => r,
+                                        Err(e) => 0.0,
+                                    };
+                                    let color2 = match data[1].parse::<f32>(){
+                                        Ok(r) => r,
+                                        Err(e) => 0.0,
+                                    };
+                                    let color3 = match data[2].parse::<f32>(){
+                                        Ok(r) => r,
+                                        Err(e) => 0.0,
+                                    };
+                                    let color4 = match data[3].parse::<f32>(){
+                                        Ok(r) => r,
+                                        Err(e) => 0.0,
+                                    };
+
+                                    objects
+                                        .get_mut(&charnode)
+                                        .unwrap()
+                                        .set_uniform_color(color1, color2, color3, color4)
+                                        .unwrap();
+                                }
+                                // remove the entree from the pool
+                                //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
+
+                            }
+                        }
+                    }
+                    vmap.setstringarray("blueengine.textcolor_q",Vec::new());
+                }
+
+                // text update quee, this changes the updated characters with new settings.
+                let qbuffer = vmap.getstringarray("blueengine.textnodeupdate_q");
+                if qbuffer.len() != 0{
+
+                    for i in qbuffer{
+                        if i != ""{ // if queed items in pool
+                            let mut counter = 1;
+
+                            let prop = i.to_string() + ".text";
+                            let text = vmap.getvar(&prop);
+                            let prop = i.to_string() + ".x";
+                            let text_x = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".y";
+                            let text_y = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".size";
+                            let text_size = nscript_f32(&vmap.getvar(&prop));
+                            let mut scalewidth = text_size / 20.0;
+                            let mut scaleheight = text_size / 16.0;
+                            let mut distancebetweenchars: f32;
+                            distancebetweenchars = text_size / (1400.0 - (text_size * 21.0));
+
+                            let prop = i.to_string() + ".font";
+                            let usedfont = vmap.getvar(&prop);
+                            let prop = i.to_string() + ".newfont";
+                            let newfont = vmap.getvar(&prop);
+                            let prop = i.to_string() + ".newx";
+                            let newx = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".newy";
+                            let newy = nscript_f32(&vmap.getvar(&prop));
+                            let prop = i.to_string() + ".size";
+                            let newsize = nscript_f32(&vmap.getvar(&prop));
+                            let mut setposx = newx.clone();
+                            let prop = i.to_string() + ".lenght";
+                            let lenght = nscript_usize(&vmap.getvar(&prop));
+                            let splitchars = split(&text,"");
+                            let oldsize = splitchars.len();
+                            let mut scalewidth = newsize / 20.0;
+                            let mut scaleheight = newsize   / 16.0;
+                            let mut distancebetweenchars: f32;
+                            let mut rescalefromhere = false;
+                            distancebetweenchars = newsize / (1400.0 - (newsize* 21.0));
+                            for xchar in splitchars{
+                                if xchar != "" {
+                                    let charnode = i.to_string() + "_textchar_" + &counter.to_string();
+                                    counter +=1;
+
+                                    // check if the chrsize increased then add new nodes
+                                    if lenght < counter{
+                                        objects.new_object(
+                                            charnode.clone(),
+                                            vec![
+                                                Vertex {
+                                                    position: [1.0, 1.0, 0.0],
+                                                    uv: [1.0, 0.0],
+                                                    normal: [0f32, 0f32, 0f32],
+                                                },
+                                                Vertex {
+                                                    position: [1.0, -1.0, 0.0],
+                                                    uv: [1.0, 1.0],
+                                                    normal: [0f32, 0f32, 0f32],
+                                                },
+                                                Vertex {
+                                                    position: [-1.0, -1.0, 0.0],
+                                                    uv: [0.0, 1.0],
+                                                    normal: [0f32, 0f32, 0f32],
+                                                },
+                                                Vertex {
+                                                    position: [-1.0, 1.0, 0.0],
+                                                    uv: [0.0, 0.0],
+                                                    normal: [0f32, 0f32, 0f32],
+                                                },
+                                            ],
+                                            vec![2, 1, 0, 2, 0, 3],
+                                            objectsettignslayer1,
+                                            renderer
+                                        );
+                                        vmap.setvar(charnode.to_string()+".texture", "reset.");
+                                        #[cfg(debug_assertions)]
+                                        println!("new node added for  {} text {}",&i,counter);
+                                    }
+                                    let  mut layer1 = objects
+                                        .get_mut(&charnode)
+                                        .expect("failed to gete object");
+
+                                    layer1.set_render_order(1).unwrap();
+                                    layer1.camera_effect = false;
+
+                                    // check for texture changes
+                                    let textureprop = usedfont.to_string() + "." + &Bluenc::pngcharname(&xchar);
+                                    let texture = vmap.getvar(&textureprop);
+                                    let chrtextureprop = charnode.to_string()+".texture";
+                                    let chrtexture = vmap.getvar(&chrtextureprop);
+                                    if chrtexture != texture  || newfont != usedfont{
+                                        rescalefromhere = true;
+                                        objects
+                                            .get_mut(&charnode)
+                                            .expect("Error during copying texture of the main square")
+                                            .reference_texture(texture.clone());
+                                        vmap.setvar(charnode.to_string()+".texture",&texture);
+                                        vmap.setvar(charnode.to_string()+".font",&newfont);
+                                        #[cfg(debug_assertions)]
+                                        println!("textnode {} char {} texture {}",&i,&charnode,&texture);
+
+                                    }
+
+                                    // check for changes on scale
+                                    let key = i.to_string() + ".newsize";
+                                    let newsize = nscript_f32(&vmap.getvar(&key));
+                                    if newsize != text_size || rescalefromhere {
+
+
+                                        objects
+                                            .get_mut(&charnode)
+                                            .unwrap()
+                                            .resize(scalewidth, scaleheight, 0.0,window.inner_size());
+                                        objects.update_object(&charnode[..], |object| {
+                                        object.set_scale(scalewidth,scaleheight,0.0);
+                                    });;
+                                        vmap.setvar(i.to_string()+ ".size", &text_size.to_string());
+                                    #[cfg(debug_assertions)]
+                                        println!("size adjusted");
+                                    //}
+
+                                    // check if the postion has changed
+                                    //if newx != text_x || newy != text_y{
+
+                                        //setposx = newx.clone();
+                                        vmap.setvar(i.to_string()+".x", &newx.to_string());
+                                        vmap.setvar(i.to_string()+".y", &newy.to_string());
+                                        objects
+                                            .get_mut(&charnode)
+                                            .unwrap()
+                                            .set_position(setposx, newy, nscript_f32("0.0"));
+                                        #[cfg(debug_assertions)]
+                                        println!("textnode {} x {} nx {} y {} ny {}",&i,&text_x.to_string(),&newx.to_string(),&text_y.to_string(),&newy.to_string());
+                                    }
+                                    match xchar {// custom adjusting for characters
+                                        "1" | "i" | " " | "." | "," => {
+                                            setposx = setposx + (distancebetweenchars*0.6);
+                                        }
+                                        "f" | "t" =>{
+                                            setposx = setposx + (distancebetweenchars*0.8);
+                                        }
+
+                                        "y" | "z" | "x" | "d" | "u" | "r" | "s" | "o" | "c" | "a" =>{
+                                            setposx = setposx + (distancebetweenchars*1.05);
+                                        }
+                                        "w" | "\\" | "/" | "#" | "m" => {
+
+                                            setposx = setposx + (distancebetweenchars*1.25);
+                                        }
+                                        _ =>{
+                                            setposx = setposx + distancebetweenchars;
+                                        }
+
+                                    }
+
+
+                                    //}
+
+                                }
+                            }
+
+
+                            // wipe the remaining
+                            let  mut counter2 = counter.clone();
+                            if counter <= oldsize-1 {
+                                for xspace in counter..oldsize{
+
+                                    let charnode = i.to_string() + "_textchar_" + &counter2.to_string();
+                                    objects.remove(&charnode);
+                                    counter2 +=1;
+
+                                }
+                            }
+                            vmap.setvar(i.to_string()+".lenght",&counter.to_string());
+                        }
+                    }
+                    vmap.setstringarray("blueengine.textnodeupdate_q",Vec::new());
+                }
+
+                let qbuffer = vmap.getstringarray("blueengine.textdelete_q");
+                if qbuffer.len() != 0{
+                    for i in qbuffer{
+                        if i != ""{ // if queed items in pool
+                            let key = i.to_string() + ".lenght";
+                            let getlenght = nscript_usize(&vmap.getvar(&key));
+                            for xchar in 1..getlenght{
+                                // create the nscript variable
+                                let charnode = i.to_string() + "_textchar_" + &xchar.to_string();
+                                    objects.remove(&charnode);
+
+                                vmap.setvar(i.to_string() + ".lenght", "0");
+                            }
+                            vmap.setvar(key.to_string(), "0");
+                        }
+                    }
+                    vmap.setstringarray("blueengine.textdelete_q",Vec::new());//
+                }
             }
             //reset nscript property
         })
         .expect("Error during update loop");
 }
-
-
-
-
-
 

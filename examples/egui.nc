@@ -19,7 +19,9 @@ eguilabel(mygui,"sqaure Rz:","mynode.rz")
 
 // add a inputfield the typed data be life updated to a given variable(asstring)
 eguiinput(mygui,"rx:","mynode.rx")
-
+password = "123"
+eguipassword(mygui,"passwordfield:","password")
+eguilabel(mygui,"passwordfield:","password")
 // demonstration of a checkbox, so labelname , boolvariable(asstring)
 mybool = false // passed as 2th argument will be updated on click
 eguicheckbox(mygui,"checkbox","mybool")

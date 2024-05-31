@@ -208,7 +208,7 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
             };
             let setunits = 0.0 - meshhasrotated + units.to_radians();
 
-            let mut updateq = vmap.getvar("blueengine.rotation_q");
+            //let mut updateq = vmap.getvar("blueengine.rotation_q");
 
             //rotate it back to 0
 
@@ -240,9 +240,9 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
             vmap.setvar(prop,&new_position[2].to_string());
 
 
-            let mut updateq = vmap.getvar("blueengine.update_q");
-            updateq = pooladd(&updateq, x);
-            vmap.setvar("blueengine.update_q".to_owned(),&updateq);
+            //let mut updateq = vmap.getvar("blueengine.update_q");
+            //updateq = pooladd(&updateq, x);
+            vmap.pushstringarray("blueengine.update_q",&x);
             let mut updateq = vmap.getvar("blueengine.rotation_q");
 
             let setunits = newrotations[0].to_degrees();
@@ -262,12 +262,12 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
             let setunits = newrotations[2].to_degrees();
             //let addunits = units.to_radians() + tosetz.parse::<f64>().unwrap_or(0.0);
             let set = x.to_owned() + "," + &setunits.to_string() + ",z," ;
-            updateq = pooladd(&updateq, &set);
+            //updateq = pooladd(&updateq, &set);
             let prop = x.to_owned() + ".rz";
             vmap.setvar(prop,&setunits.to_string());
 
 
-            vmap.setvar("blueengine.rotation_q".to_owned(),&updateq);
+            vmap.pushstringarray("blueengine.rotation_q",&set);
 
         }
     }
@@ -318,6 +318,9 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
         "spriteload" => {
             return Bluenc::spriteload(&param1, &param2, vmap);
         }
+        "spritedelete" => {
+            Bluenc::spritedelete(&param1, vmap);
+}
         "spritesetanimation" =>{
              Bluenc::spritesetanimation(&param1, &param2, vmap);
         }
@@ -379,10 +382,10 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
             Bluenc::textureset(&param1,&param2,vmap);
         }
         "nodesetcolor" => {
-            let getq = vmap.getvar("blueengine.color_q");
+            //let getq = vmap.getvar("blueengine.color_q");
             if param1 != "" && param2 != ""{
                 let colorstring = "".to_owned() + &param1 + "," + &param2;
-                vmap.setvar("blueengine.color_q".to_owned(), &colorstring);
+                vmap.pushstringarray("blueengine.color_q", &colorstring);
             }
         }
         "image2d" => {
@@ -409,6 +412,9 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
         "eguiinput" => {
             Bluenc::eguiinput(&param1, &param2, &param3, vmap)
         }
+        "eguipassword" => {
+            Bluenc::eguipassword(&param1, &param2, &param3, vmap)
+        }
         "eguicheckbox" => {
             Bluenc::eguicheckbox(&param1, &param2, &param3, vmap)
         }
@@ -429,6 +435,22 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
         }
         "eguicombo" => {
             Bluenc::eguicombo(&param1, &param2, &param3, &param4, vmap)
+        }
+        "pngfontload" =>{
+            return Bluenc::loadpngfont(&param1, vmap);
+        }
+        "textnode" => {
+            return Bluenc::textnode(&param1, &param2, &param3, &param4, &param5, &param6, vmap);
+        }
+        "textnodeupdate" => {
+             Bluenc::textnodeupdate(&param1, &param2, &param3, &param4, &param5, &param6, vmap);
+        }
+        "textnodecolor" => {
+            Bluenc::textnodecolor(&param1, &param2, vmap);
+        }
+        "textnodedelete" => {
+            //let getq = vmap.getvar("blueengine.textdelete_q");
+            vmap.pushstringarray("blueengine.textdelete_q", &param1);
         }
 
 

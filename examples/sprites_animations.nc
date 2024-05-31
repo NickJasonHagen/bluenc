@@ -1,4 +1,7 @@
 
+mynode = spriteload("idle","resources/characters/cammy")
+spritesetanimation(mynode,"anim_runleft")
+nodesetposition(mynode,2.0,0.0,-2.0)
 mynode = spriteload("mynode","resources/characters/cammy")
 spritesetanimation(mynode,"anim_idleleft")
 
@@ -11,6 +14,8 @@ coroutine "gameloop"{
         if key.a == "down"{
             spritesetanimation(mynode,"anim_idleleft")
             nodesetposition(mynode2,-2.0)
+            spritedelete("idle")
+            nodedelete("idle")
         }
         if key.d == "down"{
             spritesetanimation(mynode,"anim_idleright")

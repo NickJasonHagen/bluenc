@@ -10,7 +10,8 @@ pub struct Bluenc{
 impl Bluenc {
     pub fn camerasetposition(x: &f64,y:&f64,z:&f64,targetx:&f64,targety:&f64,targetz:&f64,vmap:&mut Varmap){
         let toset = "".to_owned() + &x.to_string() + "," + &y.to_string() + "," +  &z.to_string() + "," + &targetx.to_string() + "," + &targety.to_string() + "," +  &targetz.to_string();
-        vmap.setvar("blueengine.camera_q".to_owned(), &toset);
+        //vmap.setvar("blueengine.camera_q".to_owned(), &toset);
+        vmap.pushstringarray("blueengine.camera_q", &toset);
         vmap.setvar("camera.x".to_owned(), &x.to_string());
         vmap.setvar("camera.y".to_owned(), &y.to_string());
         vmap.setvar("camera.z".to_owned(), &z.to_string());
@@ -20,8 +21,9 @@ impl Bluenc {
     }
     pub fn image2d(objectname: &str,x: &f64,y:&f64,z:&f64,vmap: &mut Varmap) -> String{
         if objectname == "" {return "".to_string();}
-        let loadq = vmap.getvar("blueengine.pngfont_q");
-        vmap.setvar("blueengine.pngfont_q".to_string(),&pooladd(&loadq,&objectname));
+        //let loadq = vmap.getvar("blueengine.image2d_q");
+        //vmap.setvar("blueengine.image2d_q".to_string(),&arraypush(&loadq,&objectname));
+        vmap.pushstringarray("blueengine.image2d_q", &objectname);
         let prop = "".to_owned() + &objectname  + ".nodetype";
         vmap.setvar(prop.to_string(),"image2d");
         Bluenc::nodesetposition(&objectname, x, y, z, vmap);
@@ -32,8 +34,9 @@ impl Bluenc {
     }
     pub fn nodespawnsquare(objectname: &str,x: &f64,y:&f64,z:&f64,vmap: &mut Varmap) -> String{
         if objectname == "" {return "".to_string();}
-        let loadq = vmap.getvar("blueengine.square_q");
-        vmap.setvar("blueengine.square_q".to_string(),&pooladd(&loadq,&objectname));
+        //let loadq = vmap.getvar("blueengine.square_q");
+        //map.setvar("blueengine.square_q".to_string(),&arraypush(&loadq,&objectname));
+        vmap.pushstringarray("blueengine.square_q", &objectname);
         let prop = "".to_owned() + &objectname  + ".nodetype";
         vmap.setvar(prop.to_string(),"square");
         Bluenc::nodesetposition(&objectname, x, y, z, vmap);
@@ -46,8 +49,9 @@ impl Bluenc {
     pub fn nodedelete(objectname: &str,vmap:&mut Varmap){
 
         if objectname == "" {return;}
-        let getpooldata = vmap.getvar("blueengine.deletion_q");
-        vmap.setvar("blueengine.deletion_q".to_string(),&pooladd(&getpooldata,&objectname));
+        //let getpooldata = vmap.getvar("blueengine.deletion_q");
+        //vmap.setvar("blueengine.deletion_q".to_string(),&arraypush(&getpooldata,&objectname));
+        vmap.pushstringarray("blueengine.deletion_q", objectname);
     }
 
     pub fn nodesetposition(objectname: &str,x: &f64,y:&f64,z:&f64,vmap:&mut Varmap){
@@ -60,8 +64,8 @@ impl Bluenc {
         let prop = "".to_owned() + &objectname + ".z";
         vmap.setvar(prop,&z.to_string());
         let positionset = "".to_owned() + &objectname + "," + &x.to_string() + "," + &y.to_string() + "," + &z.to_string();
-        let getpooldata = vmap.getvar("blueengine.position_q");
-        vmap.setvar("blueengine.position_q".to_string(),&pooladd(&getpooldata,&positionset));
+        //let getpooldata = vmap.getvar("blueengine.position_q");
+        vmap.pushstringarray("blueengine.position_q",&positionset);
     }
 
     pub fn nodesetrotation(objectname: &str,x: &f64,y:&f64,z:&f64,vmap:&mut Varmap){
@@ -74,14 +78,18 @@ impl Bluenc {
         let prop = "".to_owned() + &objectname + ".rz";
         vmap.setvar(prop,&z.to_string());
 
-        let mut getpooldata = vmap.getvar("blueengine.rotation_q");
+        //let mut getpooldata = vmap.getvar("blueengine.rotation_q");
         let positionset = "".to_owned() + &objectname + "," + &x.to_string() + ",x";
-        getpooldata = pooladd(&getpooldata,&positionset);
+        vmap.pushstringarray("blueengine.rotation_q", &positionset);
+       // getpooldata = arraypush(&getpooldata,&positionset);
+
         let positionset = "".to_owned() + &objectname + "," + &y.to_string() + ",y";
-        getpooldata = pooladd(&getpooldata,&positionset);
+        vmap.pushstringarray("blueengine.rotation_q", &positionset);
+        //getpooldata = arraypush(&getpooldata,&positionset);
         let positionset = "".to_owned() + &objectname + "," + &z.to_string() + ",z";
-        getpooldata = pooladd(&getpooldata,&positionset);
-        vmap.setvar("blueengine.rotation_q".to_string(),&getpooldata);
+        vmap.pushstringarray("blueengine.rotation_q", &positionset);
+        //getpooldata = arraypush(&getpooldata,&positionset);
+        //vmap.setvar("blueengine.rotation_q".to_string(),&getpooldata);
 
     }
     ///sets the scale of a blueengine(Nscript) node
@@ -95,8 +103,9 @@ impl Bluenc {
         let prop = "".to_owned() + &objectname + ".sz";
         vmap.setvar(prop,&z.to_string());
         let positionset = "".to_owned() + &objectname + "," + &x.to_string() + "," + &y.to_string() + "," + &z.to_string();
-        let getpooldata = vmap.getvar("blueengine.scale_q");
-        vmap.setvar("blueengine.scale_q".to_string(),&pooladd(&getpooldata,&positionset));
+        //let getpooldata = vmap.getvar("blueengine.scale_q");
+        //vmap.setvar("blueengine.scale_q".to_string(),&arraypush(&getpooldata,&positionset));
+        vmap.pushstringarray("blueengine.scale_q", &positionset);
 
     }
 
@@ -140,63 +149,86 @@ impl Bluenc {
 
     pub fn textureload(texturepath: &str,vmap:&mut Varmap) -> String{
         // adds a texture to the textureloadquee located in the main app loop
-        let mut getq = vmap.getvar("blueengine.textureload_q");
-        getq = pooladd(&getq,&texturepath);
-        vmap.setvar("blueengine.textureload_q".to_owned(),&getq);
+        //let mut getq = vmap.getvar("blueengine.textureload_q");
+        //getq = arraypush(&getq,&texturepath);
+        //vmap.setvar("blueengine.textureload_q".to_owned(),&getq);
+        vmap.pushstringarray("blueengine.textureload_q", &texturepath);
         return "blueengine_textures.".to_owned()+&Nstring::stringtoeval(&texturepath);
     }
 
     pub fn textureset(object: &str,texture:&str,vmap:&mut Varmap){
-        let mut getq = vmap.getvar("blueengine.textureset_q");
+        //let mut getq = vmap.getvar("blueengine.textureset_q");
         let newqentree = "".to_owned() + &object + "," + &texture + ",";
-        getq = pooladd(&getq,&newqentree);
-        vmap.setvar("blueengine.textureset_q".to_owned(),&getq);
+        //getq = arraypush(&getq,&newqentree);
+        //vmap.setvar("blueengine.textureset_q".to_owned(),&getq);
+        vmap.pushstringarray("blueengine.textureset_q",&newqentree);
 
     }
+    pub fn spritedelete(object:&str,vmap:&mut Varmap){
+        let mut getspritebuffer = vmap.getstringarray("animationhandler.allsprites");
+        getspritebuffer.retain(|value| *value != object);
+        vmap.setstringarray("animationhandler.allsprites", getspritebuffer);
+        Bluenc::nodedelete(object, vmap);
+    }
     pub fn spriteload(objectname: &str,dir:&str,vmap:&mut Varmap) -> String{
-        vmap.setvar("thissprite".to_owned(), &objectname);
-        for xfile in split(&Nfile::dirtolist(dir, true),NC_ARRAY_DELIM){
-            if Nstring::instring(&xfile,".png") {
-                Bluenc::textureload(xfile, vmap);
+        let spritedirloadedprop = "spritesdirloaded_".to_owned() + &Nstring::stringtoeval(&dir);
+        vmap.setvar("thissprite".to_owned(), &spritedirloadedprop);
+        // check for a main dirsprite obj, if its not there create it.
+        let isloaded  = vmap.getvar(&spritedirloadedprop);
+        if isloaded != "loaded"{
+            for xfile in split(&Nfile::dirtolist(dir, true),NC_ARRAY_DELIM){
+                if Nstring::instring(&xfile,".png") {
+                    Bluenc::textureload(xfile, vmap);
+                }
             }
             let initscript = "".to_owned() + &dir + "/config.nc";
             nscript_execute_script(&initscript, "", "", "", "", "", "", "", "", "", vmap);
-
+            //let thissprite = objectname.to_string();//vmap.getvar("thissprite");
+            vmap.setvar(spritedirloadedprop.clone(), "loaded");
+            let animvec =splittostringvec(&arraysearch(&vmap.inobj(&spritedirloadedprop), "anim_"),"|");
+            vmap.setstringarray(&spritedirloadedprop, animvec);
         }
-        let thissprite = vmap.getvar("thissprite");
-        for xanim in split(&arraysearch(&vmap.inobj(&thissprite), "anim_"),"|"){
-            let getprop = "".to_owned() + &thissprite + "."+ &xanim;
-            let getarray = vmap.getvar(&getprop);
-            let mut fullpathstring = objectname.to_owned();
-            let mut counter = 0;
-            for xframe in split(&getarray,NC_ARRAY_DELIM){
-                if counter !=0  && xframe != "" && counter > 0{
-                    fullpathstring = fullpathstring.to_owned() + "|blueengine_textures." + &Nstring::stringtoeval(&dir) + "_" + &xframe + "_png" ;
+        vmap.setobj(&spritedirloadedprop, &objectname);
+            for xanim in vmap.getstringarray(&spritedirloadedprop){
+                let getprop = "".to_owned() + &spritedirloadedprop + "."+ &xanim;
+                let getarray = vmap.getvar(&getprop);
+                let mut fullpathstring = spritedirloadedprop.to_owned();
+                let mut counter = 0;
+                for xframe in split(&getarray,NC_ARRAY_DELIM){
+                    if counter == 0 {
+                        fullpathstring = objectname.to_string() + "|" + &xframe;
+                    }
+                    if counter !=0  && xframe != "" && counter > 0{
+                        fullpathstring = fullpathstring.to_owned() + "|blueengine_textures." + &Nstring::stringtoeval(&dir) + "_" + &xframe + "_png" ;
+                    }
+
+                    counter +=1;
                 }
-                if counter == 0 {
-                    fullpathstring = fullpathstring + "|" + &xframe;
-                }
-                counter +=1;
+
+                //fullpathstring = Nstring::trimright(&fullpathstring,1);// cut off last pipe
+                let newprop = "".to_owned() + &objectname + "." + &Nstring::replace(&xanim,"anim_","texturearray_") ;
+                vmap.setvar(newprop.to_owned(), &fullpathstring);
+                #[cfg(debug_assertions)]
+                println!("debug:new {} animarray:{}",&newprop,&fullpathstring);
+                vmap.setvar(spritedirloadedprop.clone() + ".animationtimer",&Ntimer::init().to_string());
+                //let mut animationhandlerarray = vmap.getvar("animationhandler.allsprites");
+                //animationhandlerarray = arraypush(&animationhandlerarray, &thissprite);
             }
+        //clone maindirobj to new objectname
 
-            //fullpathstring = Nstring::trimright(&fullpathstring,1);// cut off last pipe
-            let newprop = "".to_owned() + &objectname + "." + &Nstring::replace(xanim,"anim_","texturearray_") ;
-            vmap.setvar(newprop.to_owned(), &fullpathstring);
-        #[cfg(debug_assertions)]
-        println!("debug:new {} animarray:{}",&newprop,&fullpathstring);
-            vmap.setvar(thissprite.clone() + ".animationtimer",&Ntimer::init().to_string());
-            let mut animationhandlerarray = vmap.getvar("animationhandler.allsprites");
-            animationhandlerarray = pooladd(&animationhandlerarray, &thissprite);
-            vmap.setvar("animationhandler.allsprites".to_owned(), &animationhandlerarray);
-        }
+            //vmap.setvar("animationhandler.allsprites".to_owned(), &animationhandlerarray);
 
+
+
+            vmap.pushstringarray("animationhandler.allsprites", &objectname);
         vmap.setvar(dir.to_owned()+".name", &dir);
 
         // add a square to the animated node
-        let sqrq = vmap.getvar("blueengine.square_q");
-        vmap.setvar("blueengine.square_q".to_owned(),&pooladd(&sqrq,&objectname));
+        //let sqrq = vmap.getvar("blueengine.square_q");
+        //vmap.setvar("blueengine.square_q".to_owned(),&arraypush(&sqrq,&objectname));
+        vmap.pushstringarray("blueengine.square_q", &objectname);
 
-        return thissprite; // required per sprite set first thissprite in nscript
+        return objectname.to_string(); // required per sprite set first thissprite in nscript
     }
     pub fn spritesetanimation(object:&str,anim:&str,vmap:&mut Varmap){
         let curanimprop = object.to_string()+".currentanim";
@@ -207,11 +239,11 @@ impl Bluenc {
 
             vmap.setvar(object.to_string()+".animationswitchtimer", &Ntimer::init().to_string());
             let key = "blueengine.anim_q";
-            let getanimq = vmap.getvar(key);
+            //let getanimq = vmap.getvar(key);
             let animarraykey = "".to_owned() + &object + ".texturearray_" + &Nstring::replace(&anim,"anim_","");
             let animarray = vmap.getvar(&animarraykey);
 
-            vmap.setvar("blueengine.anim_q".to_owned(), &pooladd(&getanimq,&animarray));
+            vmap.pushstringarray("blueengine.anim_q", &animarray);
             #[cfg(debug_assertions)]
             println!("debg:animarray:{}",&animarray);
         }
@@ -227,7 +259,7 @@ impl Bluenc {
     }
     pub fn eguiopen(name:&str,vmap:&mut Varmap){
         let mut guiactivemenus = Nstring::replace(&vmap.getvar("guiactivemenus"),"|",NC_ARRAY_DELIM);
-        guiactivemenus = pooladd(&guiactivemenus, &name);
+        guiactivemenus = arraypush(&guiactivemenus, &name);
         vmap.setvar("guiactivemenus".to_string(), &Nstring::replace(&guiactivemenus, NC_ARRAY_DELIM, "|"));
     }
 
@@ -268,6 +300,11 @@ impl Bluenc {
     }
     pub fn eguiinput(windowname:&str,buttonname:&str,varstr:&str,vmap:&mut Varmap ){
         let getid = Bluenc::eguigetid(&windowname, "input", vmap);
+        vmap.setvar(windowname.to_string()+".control_"+ &getid, &buttonname);
+        vmap.setvar(windowname.to_string()+".var_"+ &getid,&varstr );
+    }
+    pub fn eguipassword(windowname:&str,buttonname:&str,varstr:&str,vmap:&mut Varmap ){
+        let getid = Bluenc::eguigetid(&windowname, "password", vmap);
         vmap.setvar(windowname.to_string()+".control_"+ &getid, &buttonname);
         vmap.setvar(windowname.to_string()+".var_"+ &getid,&varstr );
     }
@@ -318,5 +355,88 @@ impl Bluenc {
         vmap.setvar(name.to_string()+".type_"+ &newid.to_string(),&uitype);
         return newid.to_string();
     }
+    /// a textnode for bluenc, renders a textstring of seperated png files onto the top layer for
+    /// overlay
+    pub fn textnode(identifiername:&str,defaulttext: &str,x: &str,y: &str,size:&str,font:&str,vmap: &mut Varmap) -> String{
+        //let getq = vmap.getvar("blueengine.textnode_q");
+        vmap.setvar(identifiername.to_string() + ".text", &defaulttext.to_lowercase());
+        vmap.setvar(identifiername.to_string() + ".x", &x);
+        vmap.setvar(identifiername.to_string() + ".y", &y);
+        vmap.setvar(identifiername.to_string() + ".size", &size);
+        vmap.setvar(identifiername.to_string() + ".font", &font);
+        vmap.pushstringarray("blueengine.textnode_q",&identifiername);
+        identifiername.to_string()
+    }
+    pub fn textnodeupdate(identifiername:&str,defaulttext: &str,x: &str,y: &str,size:&str,font:&str,vmap: &mut Varmap) -> String{
+        //let getq = vmap.getvar("blueengine.textnodeupdate_q");
+        vmap.setvar(identifiername.to_string() + ".text", &defaulttext.to_lowercase());
+        vmap.setvar(identifiername.to_string() + ".newx", &x);
+        vmap.setvar(identifiername.to_string() + ".newy", &y);
+        vmap.setvar(identifiername.to_string() + ".newsize", &size);
+        vmap.setvar(identifiername.to_string() + ".newfont", &font);
+        vmap.pushstringarray("blueengine.textnodeupdate_q",&identifiername);
+        identifiername.to_string()
+    }
+    /// loads a pngfont for bluenc, used for textnode
+    pub fn loadpngfont(dirname:&str,vmap:&mut Varmap) ->String{
 
+        let fontobjectname = Nstring::stringtoeval(&dirname.to_string());
+        for xchar in split(&Nfile::dirtolist(&dirname,false),NC_ARRAY_DELIM){
+            let prop = fontobjectname.to_owned() + "." + &xchar;
+            let toload = dirname.to_string() + &xchar;
+            let loadtexture = Bluenc::textureload(&toload, vmap);
+            vmap.setvar(prop.to_string(),&loadtexture);
+
+        }
+        fontobjectname
+
+    }
+    /// set a color to the textnodes, will render to all characters
+    pub fn textnodecolor(identifiername:&str,colorcode:&str,vmap:&mut Varmap){
+        //let getq = vmap.getvar("blueengine.textcolor_q");
+        vmap.setvar(identifiername.to_string() +".color",&colorcode);
+        vmap.pushstringarray("blueengine.textcolor_q",&identifiername);
+    }
+
+     /// this function will return the filename of the pngfont, a questionmark be returned for
+    /// unknown characters to not crash the engine!
+    pub fn pngcharname(char:&str) ->String{
+        let chrtexturename = match char{
+            "1"|"2"|"3"|"4"|"5"|"6"|"7"|"8"|"9"|"0"| "a" | "b" | "c" | "d" | "e" | "f" | "g" | "h" | "i" | "j" | "k" | "l" | "m" | "n" | "o" | "p" | "q" |"r" | "s" | "t" | "u" | "v" | "w" | "x" | "y" | "z" =>{
+                return char.to_string();
+            }
+            "." => {"dot".to_string()}
+            " " => {"space".to_string()}
+            "," => {"comma".to_string()}
+            "(" => {"parenthesisopen".to_string()}
+            ")" => {"parenthesisclose".to_string()}
+            "{" => {"curlybrackeyopen".to_string()}
+            "}" => {"curlybrackeyclose".to_string()}
+            "]" => {"squarebrackeyclose".to_string()}
+            "[" => {"squarebrackeyopen".to_string()}
+            ">" => {"anglebrackeyclose".to_string()}
+            "<" => {"anglebrackeyopen".to_string()}
+            "*" => {"asterix".to_string()}
+            "&" => {"ampersand".to_string()}
+            ":" => {"colon".to_string()}
+            "!" => {"exclamationmark".to_string()}
+            "$" => {"dollar".to_string()}
+            "?" => {"questionmark".to_string()}
+            "@" => {"at".to_string()}
+            ";" => {"semicolon".to_string()}
+            "|" => {"pipe".to_string()}
+            "-" => {"dash".to_string()}
+            "+" => {"plus".to_string()}
+            "#" => {"hashtag".to_string()}
+            "%" => {"percentage".to_string()}
+            "^" => {"caret".to_string()}
+            "_" => {"underscore".to_string()}
+            "/" => {"slash".to_string()}
+            "\\" => {"backslash".to_string()}
+
+
+            _ => "questionmark".to_string()
+        };
+        return chrtexturename;
+    }
 }
