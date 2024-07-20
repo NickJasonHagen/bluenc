@@ -1438,6 +1438,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                         .get_mut(&charnode)
                                         .expect("Error during copying texture of the main square")
                                         .reference_texture(texture.clone());
+
                                     vmap.setvar(charnode.to_string()+".texture",&texture);
 
 
