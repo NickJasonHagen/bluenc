@@ -10,7 +10,7 @@ class controls{
                 //print("mm")
             }
 
-            if instring(guiactivemenus,"clasmenu") == false{
+
                 player.attacking = false
                 if key.j == "down"{
                     hit()
@@ -111,10 +111,10 @@ class controls{
                     bn3delete("square_1")
 
                 }
-                if moved == "true" {
+                if moved == "true"{
                     *currentplayer.setpos(player.x ,player.y,0.4)
                     player.movedtimer = timerinit()
-                    blueengine.setposition("cursor",player.x ,player.y,player.z)
+                    nodesetposition("cursor",player.x ,player.y,player.z)
                     camera.x = player.x
                     camera.y = math player.y - 3
                     map.calculatemappos()
@@ -122,7 +122,7 @@ class controls{
                     moved = "false"
                 }
             
-            }
+            
         }
     }
 }

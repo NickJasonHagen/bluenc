@@ -4,10 +4,11 @@ class map{
         sety = 0
         setz = 0
         loadtimer = timerinit()
-        tox = 40000
-        toy = tox / 100 //yeah its already half units
+        gridsize = 10000
+        tox = 125
+        //toy = gridsize
         cwrite(cat("loading ",tox," sqaures started"),"g")
-        for x to tox{
+        for x to gridsize{
             thisobj = cat("square_",x)
             //blueengine.addsquare(thisobj)
 
@@ -63,8 +64,8 @@ class map{
             //print(cat("setting mappos:",mappos," with ref:",ref))
             //bn3setposition(thisobj,newx,newy,0.0)
             setx = math setx + 2
-            if setx > toy {
-                print(cat("loading:",x,"/",tox," ->",self.*mappos))
+            if setx > tox {
+                print(cat("loading:",x,"/",gridsize," ->",self.*mappos))
                 setx = 0
                 sety = math sety - 2
             }
@@ -72,7 +73,7 @@ class map{
         skydometexture = print(cat("blueengine_textures.",stringtoeval(cat(@nscriptpath,"/blueengine/resources/map/","night.jpg"))))
         //blueengine.addsquare("skydome").settexture("skydome",skydometexture).setposition("skydome",30,60,30).setrotation("skydome",75,"x").setscale("skydome",120,120,0)
         
-        self.calculatemappos().setviewrange(16,10).setmapview(self.calcx,self.calcy).loadmappart()
+        self.calculatemappos().setviewrange(14,6).setmapview(self.calcx,self.calcy)//.loadmappart()
     }
     func tileid(posx,posy){
         return cat("map_maptile_",replace(posx,"-","m"),"_",replace(posy,"-","m"))
@@ -181,6 +182,8 @@ class map{
             //self.setmapview(mat("self.view_x + 2"),self.view_y)
             //print(cat("spawning:",tilename))
         }
+        allpropsofmap = inobj("map")
+        print(allpropsofmap[?])
     }
     func mapmovedown(){
         print(cat("wiping:",self.beginrowx))
@@ -196,6 +199,8 @@ class map{
             //self.setmapview(mat("self.view_x + 2"),self.view_y)
             //print(cat("spawning:",tilename))
         }
+        allpropsofmap = inobj("map")
+        print(allpropsofmap[?])
     }
     func clearcorners(){
         tx = self.beginrowx - 2
@@ -219,3 +224,4 @@ class map{
     self.view_x = 0
     self.view_y = 0
 }
+print(iscode(map))

@@ -448,14 +448,32 @@ pub fn testrotate(objectname:&str,units:&f64,axis:&str,vmap: &mut Varmap){
         "textnodecolor" => {
             Bluenc::textnodecolor(&param1, &param2, vmap);
         }
+        "nodesetcolor" => {
+            Bluenc::nodesetcolor(&param1, &param2, vmap);
+        }
         "textnodedelete" => {
             //let getq = vmap.getvar("blueengine.textdelete_q");
             vmap.pushstringarray("blueengine.textdelete_q", &param1);
         }
+        "nodeprojectile" => {
+            let start = (nscript_f32(&param3),nscript_f32(&param4),nscript_f32(&param5));
+            let target = (nscript_f32(&param6),nscript_f32(&param7),nscript_f32(&param8));
+            let mut step = nscript_f32(&param9);
+            if step  < 0.001{
+                step = 0.001;
+            }
+            return Bluenc::raycaster(&param1, &param2, start, target, step, vmap);
+        }
+        "getcollisionpoint" => {
+            return Bluenc::getcollisionpoint(&param1, &param2, &param3, vmap);
+        }
+        "removecollisionpoint" => {
+            Bluenc::removecollisionpoint(&param1, vmap);
+        }
 
 
         _ =>{
-            return "".to_owned();
+            return "..".to_owned();
         }
     }
     "ok".to_owned() // if no match continue core mappings.

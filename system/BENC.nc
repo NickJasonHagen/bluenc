@@ -1,18 +1,16 @@
-class init{
-    func construct(){
-        exec(cat(@scriptdir,"/system/devtools.nc"))
-        exec(cat(@scriptdir,"/system/engine/core.nc"))
-        exec(cat(@scriptdir,"/system/engine/camera.nc"))
-        exec(cat(@scriptdir,"/system/engine/gui.nc"))
-        exec(cat(@scriptdir,"/system/engine/colission.nc"))
-        exec(cat(@scriptdir,"/system/engine/animations.nc"))
-        exec(cat(@scriptdir,"/system/engine/tools/modeleditor.nc"))
-        exec(cat(@scriptdir,"/system/engine/tools/mapeditor.nc"))
-        exec(cat(@scriptdir,"/system/engine/map/map.nc"))
-        exec(cat(@scriptdir,"/system/engine/controls.nc"))
-    }
 
-}
+nscriptpath = print("~/nscript")
+exec(cat(@scriptdir,"system/devtools.nc"))
+exec(cat(@scriptdir,"system/engine/core.nc"))
+exec(cat(@scriptdir,"system/engine/camera.nc"))
+exec(cat(@scriptdir,"system/engine/gui.nc"))
+exec(cat(@scriptdir,"system/engine/colission.nc"))
+exec(cat(@scriptdir,"system/engine/animations.nc"))
+exec(cat(@scriptdir,"system/engine/tools/modeleditor.nc"))
+exec(cat(@scriptdir,"system/engine/tools/mapeditor.nc"))
+exec(cat(@scriptdir,"system/engine/map/map.nc"))
+exec(cat(@scriptdir,"system/engine/controls.nc"))
+
 
 class loadmods{
     func init(){
@@ -45,7 +43,7 @@ class player{
 
 
 class bmpfont{
-
+// aaa
 }
 
 //blueengine.setposition("main",0.0,0.0,0.0)
@@ -71,14 +69,15 @@ movementspeed = 0.5
 //sprite.handler()
 //print(cat("anims:",animationhandler.allsprites),"g")
 currentplayer = "rocketguy"
-playertoset = "cammy"
+playertoset = "rocketguy"
 player.lastmovedside = ""
 co_i = 0
 cmoved = false
 // trigger stuff after the everything is loaded
 // routine will break after the first frame!
+map.testmap()
 coroutine "postRTload"{
-    if co_i > 0 {
+    if co_i > 0{
         guistart()
         modeleditor.init()
         mapeditor.init()
@@ -87,13 +86,17 @@ coroutine "postRTload"{
     }
     co_i ++
 }
-map.testmap()
+
 // set the current control mode to a function inside the controls class
 controlmode = "ingame"
+
 *currentplayer.setpos(player.x ,player.y,0.4)
+
 player.movedtimer = timerinit()
+
 blueengine.setposition("cursor",player.x ,player.y,player.z)
 blueengine.setcamerapos(camera.x,camera.y,camera.z,player.x,math("player.y + 30"),math("player.z - 100"))
+//print(cat("[",iscode("sprite__load"),"]"))
 coroutine "gameloop" {
 
     controls.*controlmode()

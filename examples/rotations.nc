@@ -1,3 +1,8 @@
+class blueengine{
+    self.title = "example rotations bluenc"
+    self.renderheight = 1080
+    self.renderwidth = 1920
+}
 // load first sqaure
 mynode = nodespawnsquare("mynode")
 mytexture = textureload("resources/BlueLogoDiscord.png")
@@ -20,5 +25,9 @@ coroutine "gameloop"{
     }
     nodesetrotation("mynode",0.0,0.0,rotation)
     nodesetrotation("mynode2",rotation,0.0,0.0)
+        if key.esc == "down"{
+            run("./bluenc run examples/newgame.nc")
+            break "gameloop"
+        }
     
 }

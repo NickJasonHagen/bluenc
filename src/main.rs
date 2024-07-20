@@ -2,11 +2,7 @@
 
 #![allow(unused)]
 use blue_engine::{
-    primitive_shapes::{cube, square, triangle, uv_sphere},
-    uniform_type::Matrix,
-    utils::default_resources::DEFAULT_MATRIX_4,
-    Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings,
-    TextureData, Vertex, WindowDescriptor,
+    primitive_shapes::{cube, square, triangle, uv_sphere}, uniform_type::Matrix, utils::default_resources::DEFAULT_MATRIX_4, Engine, Instance, ObjectSettings, PolygonMode, PowerPreference, RotateAxis, ShaderSettings, StringBufferTrait, TextureData, Vertex, WindowDescriptor
 };
 //use blue_engine_egui::egui as gui;
 use blue_engine_utilities::egui;
@@ -43,6 +39,18 @@ Vertex {
         normal: [0f32, 0f32, 0f32],
     }
 }
+
+// struct ProjectileHandler{
+//
+//     pub ticks: HashMap<String,usize>,
+// }
+// impl ProjectileHandler{
+//     pub fn new(){
+//         ProjectileHandler{
+//             ticks: Hashmap::new(),
+//         }
+//     }
+// }
 
 struct Ncanimation{
     pub animation_map: HashMap<String,Vec<String>>,
@@ -179,10 +187,10 @@ fn main() {
     let mut i = 0;
     for givenarg in args.clone() {
 
-            //println!("env:{}",&givenarg);
-            let v = "".to_owned() + &givenarg.to_owned();
+        //println!("env:{}",&givenarg);
+        let v = "".to_owned() + &givenarg.to_owned();
             let key ="cmdarg".to_owned() + &i.to_string();
-vmap.setvar(key, &v);
+        vmap.setvar(key, &v);
 
             newargs.push(v);
         i +=1;
@@ -194,6 +202,8 @@ vmap.setvar(key, &v);
         newargs.push("".to_owned());
 
     }
+    vmap.setvar("guiactivemenus".to_string(),"");// internal used for eGUI ( opened menu buffer)
+    vmap.setvar("self".to_string(),"");//
     let mut initscript = NC_SCRIPT_DIR.to_owned() +"system/init.nc";
     let mut runinit = false;
     if args.len() > 2 {
@@ -205,8 +215,10 @@ vmap.setvar(key, &v);
 
 
     // exent nscript core functions with blueengine functions!
+    // this is how you extent the function library with your own
     vmap.setextentionfunctions(nscript_bluenc_functionbindings);
 
+    //nscript_execute_script(&gamedir,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
     if runinit{
         nscript_execute_script(&initscript,&newargs[1],&newargs[2],&newargs[3],&newargs[4],&newargs[5],&newargs[6],&newargs[7],&newargs[8],&newargs[9],&mut vmap);
 
@@ -231,21 +243,39 @@ vmap.setvar(key, &v);
     if powermode == "true" {
        cfgpowermode = blue_engine::PowerPreference::HighPerformance;
     }
-    let mut cfgvsync = blue_engine::wgpu::PresentMode::Fifo;
-    if vsync == "false" {
-        cfgvsync = blue_engine::wgpu::PresentMode::Immediate;
+
+#[cfg(windows)]
+        let mut cfgvsync = blue_engine::wgpu::PresentMode::AutoNoVsync;
+#[cfg(windows)]
+    if vsync != "false" && vsync != "" {
+        cfgvsync = blue_engine::wgpu::PresentMode::AutoVsync;
     }
+#[cfg(not(windows))]
+    let mut cfgvsync = blue_engine::wgpu::PresentMode::Immediate;
+#[cfg(not(windows))]
+    if vsync != "false" && vsync != "" {
+        cfgvsync = blue_engine::wgpu::PresentMode::Fifo;
+    }
+
     if renderwidth < 160 {
         renderwidth = 160
     }
     if renderheight < 120 {
         renderheight = 120
     }
+    let cfgrender = vmap.getvar("blueengine.render");
+    let rendermode = match cfgrender.as_str(){
+        "DX12" => {blue_engine::Backends::DX12}
+        "Vulkan" => {blue_engine::Backends::VULKAN}
+        "Metal" => {blue_engine::Backends::METAL}
+        "GL" | _ => {blue_engine::Backends::GL}
+    };
     let mut engine = Engine::new_config(blue_engine::WindowDescriptor {
         width: renderwidth as u32, height: renderheight as u32, title: rendertitle,
         power_preference: cfgpowermode,
         present_mode: cfgvsync,
         features: blue_engine::header::imports::wgpu::Features::empty(),
+        backends: rendermode,
         ..Default::default()
     })
     .expect("win");
@@ -268,220 +298,48 @@ let mut animationsystem = Ncanimation::new();
     //sleep(5000);
     let speed = -0.05;
     let objectsettignslayer1 = ObjectSettings {
-        camera_effect: false,
+        camera_effect: None,  //Some("main".into()),
         shader_settings: ShaderSettings::default(),
     };
 
-if 1 == 2 {// lets test if its only inside the loop..
-    // quee system to load textures , ( first nodes can be used to copy to others)
-    let queetest = nscript_checkvar("blueengine.textureload_q", &mut vmap);
-     //println!("DEBUG!!!!!!!!!!!!!{}",&queetest);
-    //cwrite(&nscript_checkvar("blueengine.textureload_q", &mut vmap),"p");
-    for i in vmap.getstringarray("blueengine.textureload_q"){//NC_ARRAY_DELIM
-        let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
-        if nscript_checkvar(&ckey, &mut vmap) == "" && i != ""{
-            #[cfg(debug_assertions)]
-            cwrite(&ckey,"green");
-            vmap.setvar("tmp".to_owned(),&i);
-            if i != "" {
-                //perform blue engine texture loading
-                let t = engine
-                    .renderer
-                    .build_texture(
-                        ckey.clone(),
-                        TextureData::Path(i.to_string()),
-                        blue_engine::TextureMode::Clamp,
-                    )
-                    .unwrap();
-                // create a object with the texture to be cloned
-                square(
-                    ckey.clone()
-                    ,
-                    ObjectSettings::default(),
-                    &mut engine.renderer,
-                    &mut engine.objects,
-                );
-                // set the main texture !
-                engine.objects.get_mut(&ckey).unwrap().set_texture(t);
 
-                // move the object out of sight ( yeah i know blue it will be invisible :P )
-                engine
-                    .objects
-                    .get_mut(&ckey)
-                    .unwrap()
-                    .set_position(-0.2f32, 0.1f32, -990.001f32);
-                // let system know its used!
-                vmap.setvar(ckey.clone(), &ckey);
-                //let m = "texture added:".to_owned() + &ckey;
-                //cwrite(&m,"purple")
-            }
-
-
-        }
-        else{
-            let m = "texture already exists:".to_owned() + &ckey;
-            cwrite(&m,"r")
-        }
-            vmap.setstringarray("blueengine.textureload_q",Vec::new() );
-    }
-
-    for i in split(&vmap.getvar("blueengine.image2d_q"),NC_ARRAY_DELIM){//NC_ARRAY_DELIM
-        //let ckey = "blueengine_textures.".to_owned() + &Nstring::stringtoeval(&i);
-        if  i != "" {
-            engine.objects.new_object(
-                i,
-                vec![
-                    vertex(1.0, 1.0, 0.0),
-                    Vertex {
-                    position: [1.0, -1.0, 0.0],
-                    uv: [1.0, 1.0],
-                    normal: [0f32, 0f32, 0f32],
-                    },
-                    Vertex {
-                    position: [-1.0, -1.0, 0.0],
-                    uv: [0.0, 1.0],
-                    normal: [0f32, 0f32, 0f32],
-                    },
-                    Vertex {
-                    position: [-1.0, 1.0, 0.0],
-                    uv: [0.0, 0.0],
-                    normal: [0f32, 0f32, 0f32],
-                    },
-                ],
-                vec![2, 1, 0, 2, 0, 3],
-                ObjectSettings {
-                    camera_effect: false,
-                    ..Default::default()
-                }
-                ,
-                &mut engine.renderer
-            );
-            engine.objects.update_object(i, |object| {
-                object.set_render_order(0).unwrap();
-
-                //object.set_scale(0.5, 0.5, 1f32);
-                //object.set_position(0.0,0.0,-10.0);
-
-    });           //layer1.flag_as_changed();
-            //println!("bmpfont {}",i);
-        }
-    }
-vmap.setvar("blueengine.image2d_q".to_owned(),"" );
-
-    //:w
-    //spanwning quee
-    for i in split(&vmap.getvar("blueengine.square_q"),NC_ARRAY_DELIM){
-        #[cfg(debug_assertions)]
-        cwrite(&i,"green");
-        if i != "" {
-        square(
-                i,
-               ObjectSettings::default(),
-                &mut engine.renderer,
-            &mut engine.objects,
-        );
-    //         engine.objects.update_object(i, |object| {
-    //             object.set_render_order(1).unwrap();
-    //
-    //             //object.set_scale(0.5, 0.5, 1f32);
-    //             object.set_position(0.0,0.0,-10.0);
-    //
-    // });
-        }
-    }
-vmap.setvar("blueengine.square_q".to_owned(),"" );
-
-    // set positions quee
-    for i in vmap.getstringarray("blueengine.position_q"){
-        //cwrite(&i,"green");
-        if i != "" {
-            let data = split(&i,",");
-            if data.len() > 3 {
-                //cwrite(&i,"yellow");
-                engine
-                    .objects
-                    .get_mut(data[0])
-                    .unwrap()
-                    .set_position(data[1].parse().unwrap_or(0.0), data[2].parse().unwrap_or(0.0), data[3].parse().unwrap_or(0.0));
-
-            }
-            else{
-                cwrite("A split error on the position quee accuired","red");
-                cwrite(&i,"red");
-
-            }
-        }
-    }
-vmap.setstringarray("blueengine.position_q",Vec::new() );
-
-            // Bridge: Nscript setTexture q.
-            let qbuffer = vmap.getstringarray("blueengine.textureset_q");
-            for i in qbuffer{
-                if i != ""{ // if queed items in pool
-
-                    let data = split(&i,",");
-                    if data.len() > 1  && data[0] != ""{
-                //cwrite(&i,"m");
-                        engine.objects
-                            .get_mut(data[0])
-                            .expect("Error during copying texture of the main square")
-                            .reference_texture(data[1]);
-                        //cwrite(data[1],"b")
-                    }
-                    else{
-                        cwrite("Split error on the settexxture q","red");
-
-                cwrite(&i,"red");
-                    }
-                    // remove the entree from the pool ( in nscript blueengine.position_quee )
-                    //vmap.setvar("blueengine.textureset_q".to_owned(),&poolremove(&qbuffer,&i) );
-                }
-            }
-vmap.setstringarray("blueengine.textureset_q",Vec::new() );
-
-    for i in vmap.getstringarray("blueengine.update_q"){
-        //cwrite(&i,"green");
-        if i != "" {
-            let prop = i.to_owned() + ".x";
-            let newx = nscript_checkvar(&prop,&mut vmap);
-            let prop = i.to_owned() + ".y";
-            let newy = nscript_checkvar(&prop,&mut vmap);
-            let prop = i.to_owned() + ".z";
-            let newz = nscript_checkvar(&prop,&mut vmap);
-
-                engine
-                    .objects
-                    .get_mut(&i)
-                    .unwrap()
-                    .set_position(newx.parse().unwrap_or(0.0), newy.parse().unwrap_or(0.0), newz.parse().unwrap_or(0.0));
-
-        }
-    }
-
-vmap.setstringarray("blueengine.update_q",Vec::new() );
-
-    for i in split(&vmap.getvar("blueengine.visibility_q"), NC_ARRAY_DELIM) {
-        //cwrite(&i,"green");
-        if i != "" {
-            let isdata = split(i, ",");
-            if isdata.len() > 1 {
-                let mut isvisbool = true;
-                if isdata[1] == "false" {
-                    isvisbool = false;
-                }
-                let isobj = engine.objects.get_mut(isdata[0]).unwrap();
-                isobj.is_visible = isvisbool;
-            }
-        }
-    }
-
-    vmap.setvar("blueengine.visibility_q".to_owned(), "");
-    }
     //cwrite(&nscript_checkvar("blueengine.squarequee", &mut vmap),"red");
 
     // key mapping, used inside game_loop for bridging to nscript
     let keyvec = [
         blue_engine::KeyCode::Escape,
+        blue_engine::KeyCode::Enter,
+        blue_engine::KeyCode::Space,
+        blue_engine::KeyCode::AltLeft,
+        blue_engine::KeyCode::AltRight,
+        blue_engine::KeyCode::ControlLeft,
+        blue_engine::KeyCode::ControlRight,
+        blue_engine::KeyCode::ShiftLeft,
+        blue_engine::KeyCode::ShiftRight,
+        blue_engine::KeyCode::Tab,
+        blue_engine::KeyCode::CapsLock,
+        blue_engine::KeyCode::F1,
+        blue_engine::KeyCode::F2,
+        blue_engine::KeyCode::F3,
+        blue_engine::KeyCode::F4,
+        blue_engine::KeyCode::F5,
+        blue_engine::KeyCode::F6,
+        blue_engine::KeyCode::F7,
+        blue_engine::KeyCode::F8,
+        blue_engine::KeyCode::F9,
+        blue_engine::KeyCode::F10,
+        blue_engine::KeyCode::F11,
+        blue_engine::KeyCode::F12,
+        blue_engine::KeyCode::Digit0,
+        blue_engine::KeyCode::Digit1,
+        blue_engine::KeyCode::Digit2,
+        blue_engine::KeyCode::Digit3,
+        blue_engine::KeyCode::Digit4,
+        blue_engine::KeyCode::Digit5,
+        blue_engine::KeyCode::Digit6,
+        blue_engine::KeyCode::Digit7,
+        blue_engine::KeyCode::Digit8,
+        blue_engine::KeyCode::Digit9,
         blue_engine::KeyCode::ArrowUp,
         blue_engine::KeyCode::ArrowDown,
         blue_engine::KeyCode::ArrowLeft,
@@ -516,6 +374,38 @@ vmap.setstringarray("blueengine.update_q",Vec::new() );
     let keyname = [
         // keymapping naming ( must contain the same size and order as the keymapping!!)
         "key.esc",
+        "key.enter",
+        "key.space",
+        "key.altleft",
+        "key.altright",
+        "key.controlleft",
+        "key.controlright",
+        "key.shiftleft",
+        "key.shiftright",
+        "key.tab",
+        "key.capslock",
+        "key.f1",
+        "key.f2",
+        "key.f3",
+        "key.f4",
+        "key.f5",
+        "key.f6",
+        "key.f7",
+        "key.f8",
+        "key.f9",
+        "key.f10",
+        "key.f11",
+        "key.f12",
+        "key.0",
+        "key.1",
+        "key.2",
+        "key.3",
+        "key.4",
+        "key.5",
+        "key.6",
+        "key.7",
+        "key.8",
+        "key.9",
         "key.up",
         "key.down",
         "key.left",
@@ -957,7 +847,31 @@ vmap.setstringarray("blueengine.update_q",Vec::new() );
             nscript_loops(&mut vmap);
             vmap.setvar("key.event".to_owned(),"false");
                 let codetimer = Instant::now();
+let event_q = vmap.getstringarray("blueengine.event_q");
 
+                if event_q.len() != 0 {
+                    // other events
+                    for xevent in event_q{
+                        let eventdata = splittostringvec(&xevent,",");
+                        //let check = eventtype[0];
+                        match eventdata[0].as_str(){
+
+                            "nodeprojectile" =>{
+                                if eventdata.len() > 5 {
+
+                                    Bluenc::nodespawnsquare(&eventdata[1], &nscript_f64(&eventdata[3]), &nscript_f64(&eventdata[4]), &nscript_f64(&eventdata[5]), &mut vmap);
+                                    Bluenc::textureset(&eventdata[1], &eventdata[2], &mut vmap);
+                                    vmap.pushstringarray("blueengine.activeprojectiles", &eventdata[1]);
+                                    vmap.setprop(&eventdata[1],"tick","0");
+                                }
+                            }
+                            _ => {
+
+                            }
+                        }
+                    }
+                }
+                vmap.setstringarray("blueengine.event_q",Vec::new());//
 
                 //
                 let qbuffer = vmap.getstringarray("blueengine.deletion_q");
@@ -966,6 +880,7 @@ vmap.setstringarray("blueengine.update_q",Vec::new() );
                         if i != ""{ // if queed items in pool
 
                             objects.remove(&i);
+                            Bluenc::removecollisionpoint(&i, &mut vmap);
 
                             // remove the entree from the pool
                             //vmap.setvar("blueengine.camera_q".to_owned(),&poolremove(&qbuffer,&i) );
@@ -1006,7 +921,7 @@ vmap.setstringarray("blueengine.update_q",Vec::new() );
                                     },
                                 ],
                                 vec![2, 1, 0, 2, 0, 3],
-                                objectsettignslayer1,
+                                objectsettignslayer1.clone(),
                                 renderer
                             );
 
@@ -1015,7 +930,7 @@ vmap.setstringarray("blueengine.update_q",Vec::new() );
                                 .expect("failed to gete object");
 
                             layer1.set_render_order(1).unwrap();
-                            layer1.camera_effect = false;
+                            layer1.camera_effect =  None; //Some("main".into());
                             //layer1.flag_as_changed();
                             //println!("sqaure {}",i);
                         }
@@ -1074,28 +989,28 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                     vmap.setstringarray("blueengine.textureload_q",Vec::new() );
                 }
 
-                let qbuffer = vmap.getvar("blueengine.bmpfonttextureset_q");
-                if qbuffer != ""{
-                    for i in split(&qbuffer,NC_ARRAY_DELIM){
-                        if i != ""{ // if queed items in pool
-                            //println!("text:{}",i);
-                            let data = split(&i,",");
-                            if data.len() > 0  && data[0] != ""{
-                                objects
-                                    .get_mut(data[0])
-                                    .expect("Error during copying texture of the main square")
-                                    .reference_texture(data[1]);
-                                //cwrite(data[1],"b")
-                            }
-                            else{
-                                cwrite("Split error on the settexture q","red")
-                            }
-                            // remove the entree from the pool ( in nscript blueengine.position_quee )
-                            //vmap.setvar("blueengine.textureset_q".to_owned(),&poolremove(&qbuffer,&i) );
-                        }
-                    }
-                }
-                vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
+                // let qbuffer = vmap.getvar("blueengine.bmpfonttextureset_q");
+                // if qbuffer != ""{
+                //     for i in split(&qbuffer,NC_ARRAY_DELIM){
+                //         if i != ""{ // if queed items in pool
+                //             //println!("text:{}",i);
+                //             let data = split(&i,",");
+                //             if data.len() > 0  && data[0] != ""{
+                //                 objects
+                //                     .get_mut(data[0])
+                //                     .expect("Error during copying texture of the main square")
+                //                     .reference_texture(data[1]);
+                //                 //cwrite(data[1],"b")
+                //             }
+                //             else{
+                //                 cwrite("Split error on the settexture q","red")
+                //             }
+                //             // remove the entree from the pool ( in nscript blueengine.position_quee )
+                //             //vmap.setvar("blueengine.textureset_q".to_owned(),&poolremove(&qbuffer,&i) );
+                //         }
+                //     }
+                // }
+                // vmap.setvar("blueengine.bmpfonttextureset_q".to_owned(),"" );
 
 
                 let qbuffer = vmap.getstringarray("blueengine.square_q");
@@ -1229,7 +1144,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                 objects
                                     .get_mut(data[0])
                                     .unwrap()
-                                    .set_uniform_color(color1, color2, color3, color4)
+                                    .set_color(color1, color2, color3, color4)
                                     .unwrap();
                             }
                         }
@@ -1506,7 +1421,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                             },
                                         ],
                                         vec![2, 1, 0, 2, 0, 3],
-                                        objectsettignslayer1,
+                                        objectsettignslayer1.clone(),
                                         renderer
                                     );
 
@@ -1515,7 +1430,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                         .expect("failed to gete object");
 
                                     layer1.set_render_order(1).unwrap();
-                                    layer1.camera_effect = false;
+                                    layer1.camera_effect = None; //Some("main".into());
                                     let textureprop = usedfont.to_string() + "." + &Bluenc::pngcharname(&xchar);
 
                                     let texture = vmap.getvar(&textureprop);
@@ -1613,7 +1528,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                     objects
                                         .get_mut(&charnode)
                                         .unwrap()
-                                        .set_uniform_color(color1, color2, color3, color4)
+                                        .set_color(color1, color2, color3, color4)
                                         .unwrap();
                                 }
                                 // remove the entree from the pool
@@ -1698,7 +1613,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                                 },
                                             ],
                                             vec![2, 1, 0, 2, 0, 3],
-                                            objectsettignslayer1,
+                                            objectsettignslayer1.clone(),
                                             renderer
                                         );
                                         vmap.setvar(charnode.to_string()+".texture", "reset.");
@@ -1710,7 +1625,7 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                                         .expect("failed to gete object");
 
                                     layer1.set_render_order(1).unwrap();
-                                    layer1.camera_effect = false;
+                                    layer1.camera_effect = None ;//Some("main".into());
 
                                     // check for texture changes
                                     let textureprop = usedfont.to_string() + "." + &Bluenc::pngcharname(&xchar);
@@ -1823,6 +1738,45 @@ vmap.setstringarray("blueengine.image2d_q",Vec::new() );
                         }
                     }
                     vmap.setstringarray("blueengine.textdelete_q",Vec::new());//
+                }
+
+
+                //handle the projectile nodes
+                let mut projectilevec = vmap.getstringarray("blueengine.activeprojectiles");
+                if projectilevec.len() > 0{
+                    for xprojectile in projectilevec {
+                        let mut currenttick = nscript_usize(&vmap.getprop(&xprojectile, "tick"));
+                        let patharray = vmap.getf32vectorarray(&xprojectile);
+                        if patharray.len() > currenttick {
+                            let x = patharray[currenttick].0 as f64;
+                            let y = patharray[currenttick].1 as f64;
+                            let z = patharray[currenttick].2 as f64;
+                            Bluenc::nodesetposition(&xprojectile, &x,&y,&z, &mut vmap);
+                            currenttick +=1;
+                            vmap.setprop(&xprojectile.to_string(),"tick",&currenttick.to_string());
+                            let collisiontrue = vmap.getprop(&xprojectile,"collision");
+                            if collisiontrue == "true" {
+                                let collisionarray = Bluenc::getcollisionpointraw(&x.to_string(), &y.to_string(), &z.to_string(), &mut vmap);
+                                if collisionarray.len() > 0 {
+                                    for xhit in collisionarray {
+                                        if xhit != xprojectile{
+                                            // trigger a nscript func param1 = projectile param2 = hitnode
+                                            let nscriptfncall = vmap.getprop(&xprojectile,"onhit") + "(\"" + &xprojectile + "\",\"" + &xhit + "\")";
+                                            nscript_func(&nscriptfncall,&mut vmap);
+                                        }
+
+                                    }
+                                }
+                            }
+                            //println!("setting projectile {} x {} y {} z {}",&xprojectile,&x,&y,&z);
+                        }
+                        else{
+                            Bluenc::nodedelete(&xprojectile, &mut vmap);
+                            vmap.retainstringarray("blueengine.activeprojectiles", &xprojectile);
+                            vmap.f32vectormap.remove(&xprojectile);
+
+                        }
+                    }
                 }
             }
             //reset nscript property

@@ -42,7 +42,9 @@ impl Bluenc {
         Bluenc::nodesetposition(&objectname, x, y, z, vmap);
         Bluenc::nodesetscale(&objectname,&10.0,&10.0,&10.0,vmap);
         Bluenc::nodesetrotation(&objectname,&0.0,&0.0,&0.0,vmap);
-
+        vmap.setprop(&objectname,"hrx","0");
+        vmap.setprop(&objectname,"hry","0");
+        vmap.setprop(&objectname,"hrz","0");
         return objectname.to_string();
     }
 
@@ -52,17 +54,20 @@ impl Bluenc {
         //let getpooldata = vmap.getvar("blueengine.deletion_q");
         //vmap.setvar("blueengine.deletion_q".to_string(),&arraypush(&getpooldata,&objectname));
         vmap.pushstringarray("blueengine.deletion_q", objectname);
+
     }
 
     pub fn nodesetposition(objectname: &str,x: &f64,y:&f64,z:&f64,vmap:&mut Varmap){
 
         if objectname == "" {return;}
-        let prop = "".to_owned() + &objectname + ".x";
-        vmap.setvar(prop,&x.to_string());
-        let prop = "".to_owned() + &objectname + ".y";
-        vmap.setvar(prop,&y.to_string());
-        let prop = "".to_owned() + &objectname + ".z";
-        vmap.setvar(prop,&z.to_string());
+        let collision = vmap.getprop(&objectname, "collision");
+        if collision == "true" {
+            Bluenc::setcollisionpoint(&objectname,&x.to_string(), &y.to_string(), &z.to_string(), vmap);
+        }
+        vmap.setprop(&objectname,"x",&x.to_string());
+        vmap.setprop(&objectname,"y",&y.to_string());
+        vmap.setprop(&objectname,"z",&z.to_string());
+
         let positionset = "".to_owned() + &objectname + "," + &x.to_string() + "," + &y.to_string() + "," + &z.to_string();
         //let getpooldata = vmap.getvar("blueengine.position_q");
         vmap.pushstringarray("blueengine.position_q",&positionset);
@@ -226,7 +231,8 @@ impl Bluenc {
         // add a square to the animated node
         //let sqrq = vmap.getvar("blueengine.square_q");
         //vmap.setvar("blueengine.square_q".to_owned(),&arraypush(&sqrq,&objectname));
-        vmap.pushstringarray("blueengine.square_q", &objectname);
+        //vmap.pushstringarray("blueengine.square_q", &objectname);
+        Bluenc::nodespawnsquare(&objectname, &0.0, &0.0, &0.0, vmap);
 
         return objectname.to_string(); // required per sprite set first thissprite in nscript
     }
@@ -391,13 +397,84 @@ impl Bluenc {
         fontobjectname
 
     }
+    /// sets on object to collisionpoint as a array of unique object identiefiers
+    pub fn setcollisionpoint(objectname:&str,x:&str,y:&str,z:&str,vmap:&mut Varmap){
+        let id = Bluenc::collisionpointtag(&x,&y,&z);
+        let getoldpointid = vmap.getprop(&objectname,"collisionpoint");
+        if getoldpointid != "" {
+            vmap.retainstringarray(&getoldpointid, &objectname);
+        }
+        if id != getoldpointid {
+            //println!("new object {} on point {}", &objectname,&id);
+            vmap.pushuniquestringarray(&id,&objectname);
+        }
+
+        // set the points id as a prop to the object whe it moves it can be reset faster
+        vmap.setprop(&objectname,"collisionpoint",&id);
+    }
+
+    /// gets a nscript array back with all objects
+    pub fn getcollisionpoint(x:&str,y:&str,z:&str,vmap:&mut Varmap) -> String{
+        let id = Bluenc::collisionpointtag(&x,&y,&z);
+        vmap.getstringarray(&id).join(NC_ARRAY_DELIM)
+    }
+
+    /// returns a normal array for faster internal use ( projectilehandler)
+    pub fn getcollisionpointraw(x:&str,y:&str,z:&str,vmap:&mut Varmap) -> Vec<String>{
+        let id = Bluenc::collisionpointtag(&x,&y,&z);
+        vmap.getstringarray(&id)
+    }
+
+    /// reads out the objec.collisionpoint property and removes itself from the group
+    pub fn removecollisionpoint(objectname:&str,vmap:&mut Varmap){
+        let id = vmap.getprop(&objectname,"collisionpoint");
+        vmap.retainstringarray(&id,&objectname);
+    }
+
+    /// interally used to get the storagetag
+    fn collisionpointtag(x:&str,y:&str,z:&str) -> String{
+        let collisionpointprop = "collisionpoint_".to_owned() + &split(&x,".")[0] + "_"+ &split(y,".")[0] + "_" + &split(&z,".")[0];
+        return collisionpointprop
+    }
+    /// this returns a array with xyz vector to be used for projectiles and rays
+    pub fn raycaster(rayid:&str,texture:&str,start: (f32, f32, f32), target: (f32, f32, f32), step: f32,vmap:&mut Varmap)->String {
+        let (x0, y0, z0) = start;
+        let (x1, y1, z1) = target;
+
+        let dx = x1 - x0;
+        let dy = y1 - y0;
+        let dz = z1 - z0;
+
+        let distance = ((dx * dx) + (dy * dy) + (dz * dz)).sqrt();
+        let steps = (distance / step).ceil() as usize;
+
+        let mut points = Vec::with_capacity(steps + 1);
+
+        for i in 0..=steps {
+            let t = i as f32 / steps as f32;
+            let x = x0 + t * dx;
+            let y = y0 + t * dy;
+            let z = z0 + t * dz;
+            points.push((x, y, z));
+        }
+
+        vmap.f32vectormap.insert(rayid.to_string(),points);
+        let queeentree = "nodeprojectile,".to_string() + &rayid + "," + &texture + "," + &start.0.to_string() + "," + &start.1.to_string() + "," + &start.2.to_string()+",";
+        vmap.pushstringarray("blueengine.event_q", &queeentree);
+        return rayid.to_string();
+    }
     /// set a color to the textnodes, will render to all characters
     pub fn textnodecolor(identifiername:&str,colorcode:&str,vmap:&mut Varmap){
         //let getq = vmap.getvar("blueengine.textcolor_q");
         vmap.setvar(identifiername.to_string() +".color",&colorcode);
         vmap.pushstringarray("blueengine.textcolor_q",&identifiername);
     }
-
+    pub fn nodesetcolor(identifiername:&str,colorcode:&str,vmap:&mut Varmap){
+        //let getq = vmap.getvar("blueengine.textcolor_q");
+        vmap.setvar(identifiername.to_string() +".color",&colorcode);
+        let topush = identifiername.to_string() + "," + &colorcode;
+        vmap.pushstringarray("blueengine.color_q",&topush);
+    }
      /// this function will return the filename of the pngfont, a questionmark be returned for
     /// unknown characters to not crash the engine!
     pub fn pngcharname(char:&str) ->String{

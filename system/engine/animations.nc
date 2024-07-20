@@ -4,7 +4,7 @@ class animationhandler{
 
     }
     func set(issprite){
-        self.allsprites = arraypush(self.allsprites,issprite)
+        self.allsprites = pooladd(self.allsprites,issprite)
     }
     self.arraychunk = 0
     self.animatetimer = timerinit()
@@ -85,21 +85,23 @@ class sprite{
     }
 
     func load(dirname){
-        self.path = cat("resources/characters/",dirname)
+
+        self.path = print(cat("resources/characters/",dirname))
         self.name = dirname
-        for x in listdir(self.path){
-            if x != ""{
-                if instring(x,".png") == true {
-                    x2 = cat("resources/characters/",dirname,x)
+        for self.xr in listdir(self.path){
+            if self.xr != ""{
+                if instring(self.xr,".png") == true {
+                    x2 = cat("resources/characters/",dirname,self.xr)
+                    print(x2)
                     blueengine.addtexture(x2)
                 }
             }
         }
         exec(cat(@scriptdir,"resources/characters/",dirname,"/config.nc"))
-        return dirname //as object reference
+        return dirname
     }
     func setanim(animationname){
-        if self.currentanim != animationname && timerdiff(self.animationswitchtimer) > 240 {
+        if self.currentanim != animationname && timerdiff(self.animationswitchtimer) > 440 {
             self.currentanim = animationname
             self.currentframe = 0
             self.animationswitchtimer = timerinit()          
@@ -120,7 +122,7 @@ class sprite{
         self.z = toz
         //this = self
         colissions.set(self,tox,toy,toz)
-        blueengine.setposition(self,tox,toy,toz)        
+        nodesetposition(self,tox,toy,toz)        
     }
     self.x = 0.0
     self.y = 0.0
@@ -130,12 +132,13 @@ class sprite{
     self.animationtimer 0//= timerinit()
 }
 
-if 1 == 1 {
+
     charactersdir = listdir(cat(@scriptdir,"resources/characters/"))
     for character in charactersdir{
-        if character != ""{
-            //print(cat("loadingchar:",character),"m")
+        if character != "" {
+            print(cat("loadingchar:",character),"m")
             chr = sprite.load(character)
+            print(cat("loadedsprite:",chr))
             *chr.animationlist = *chr.animationlist()
             //blueengine
             //*chr.animationlist = arrayshuffle(*chr.animationlist)
@@ -147,13 +150,13 @@ if 1 == 1 {
             *chr.atime = timerinit()
 
             //*chr.testroutine()
-        //print(cat("in obj:",chr,@lf,inobj(chr)))
+        print(cat("in obj:",chr,@lf,inobj(chr)))
 
         }
 
     }
     ranchar = ["dude1","dude2","girl1"]
-    rani = 0
+    rani = 1
     for xr to 5{
         //return
         cobj = cat("char_",xr)
@@ -173,4 +176,3 @@ if 1 == 1 {
         rani = 0
         }
     }
-}

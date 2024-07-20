@@ -1,3 +1,10 @@
+class blueengine{
+    self.title = "example camera bluenc"
+    self.renderheight = 1080
+    self.renderwidth = 1920
+    self.render = "Vulkan"
+}
+
 mynode = nodespawnsquare("mynode")
 mytexture = textureload("resources/BlueLogoDiscord.png")
 textureset(mynode,mytexture)
@@ -22,6 +29,10 @@ coroutine "gameloop"{
             targetz = random(-1.5,1.5)
         }
     }
+        if key.esc == "down"{
+            run("./bluenc run examples/newgame.nc")
+            break "gameloop"
+        }
     //position xyz cameratargetview xyz
     camerasetposition(setx,sety,setz,targetx,targety,targetz)
 }

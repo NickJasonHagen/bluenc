@@ -123,7 +123,6 @@ class gui{
         self.controlids = math self.controlids + 1
         typeprop = cat("type_",self.controlids)
         self.*typeprop = typec
-        self.*typeprop = typec
         varprop = cat("var_",self.controlids)
         ret = cat("control_",self.controlids)
 
@@ -142,7 +141,7 @@ class gui{
                     guiactivemenus = cat(guiactivemenus,self,"|")
                 }
                 _ =>{
-                    print(cat("welwelwel some shit went wrong on the gui.switch() val->",self.menuopenclose)
+                    print(cat("welwelwel some shit went wrong on the gui.switch() val->",self.menuopenclose))
                 }
             }
             //print(guiactivemenus,"b")

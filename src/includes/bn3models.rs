@@ -18,7 +18,7 @@ impl Bn3models{
 
         //pool to hold the quad parts on as a object
         let objectparts = objectname.to_owned() + ".parts";
-        let mut objectpartpool = "".to_owned();//vmap.getvar(&objectparts);
+        //let mut objectpartpool = "".to_owned();//vmap.getvar(&objectparts);
 
         for parts in split(&filedata,"\n"){
             let quadparts = split(parts,",");
@@ -32,7 +32,7 @@ impl Bn3models{
                 let rotz = partnode.to_owned() + "," + quadparts[6] + ",z," ;
                 let scale = partnode.to_owned() + "," + quadparts[7] + "," + quadparts[8] + "," + quadparts[9];
 
-                objectpartpool = pooladd(&objectpartpool,&partnode);
+                vmap.pushstringarray(&objectparts,&partnode);
 
                 let properties = [".texture",".x",".y",".z",".rx",".ry","rz",".sx",".sy",".sz"];
                 let mut index = 0;
@@ -42,7 +42,12 @@ impl Bn3models{
                     vmap.setvar(setx.to_owned(),&quadparts[index]);
                     index +=1;
                 }
-
+                //vmap.setvar(partnode.clone()+".hrx",&quadparts[4]);
+                //vmap.setvar(partnode.clone()+".hry",&quadparts[5]);
+                //vmap.setvar(partnode.clone()+".hrz",&quadparts[6]);
+                vmap.setvar(partnode.clone()+".hrx","0");
+                vmap.setvar(partnode.clone()+".hry","0");
+                vmap.setvar(partnode.clone()+".hrz","0");
                 let properties = [".offx",".offy",".offz"];
                 let mut index = 1;
                 // assign all properties to subquad
@@ -52,32 +57,32 @@ impl Bn3models{
                     index +=1;
                 }
                 // update all the quees in main.rs so the wgpu renders all.
-                let mut getq = vmap.getvar("blueengine.square_q");
-                getq = pooladd(&getq,&partnode);
-                vmap.setvar("blueengine.square_q".to_owned(),&getq);
+                //let mut getq = vmap.getvar("blueengine.square_q");
+                vmap.pushstringarray("blueengine.square_q",&partnode);
+                //vmap.setvar("blueengine.square_q".to_owned(),&getq);
 
-                let mut getq = vmap.getvar("blueengine.textureset_q");
+                //let mut getq = vmap.getvar("blueengine.textureset_q");
                 //let texturestring = partnode.to_owned() + "," + quadparts[0];
-                getq = pooladd(&getq,&texturestring);
-                vmap.setvar("blueengine.textureset_q".to_owned(),&getq);
+                vmap.pushstringarray("blueengine.textureset_q",&texturestring);
+                //vmap.setvar("blueengine.textureset_q".to_owned(),&getq);
 
-                let mut getq = vmap.getvar("blueengine.position_q");
-                getq = pooladd(&getq,&positionstring);
-                vmap.setvar("blueengine.position_q".to_owned(),&getq);
+                //let mut getq = vmap.getvar("blueengine.position_q");
+                 vmap.pushstringarray("blueengine.position_q",&positionstring);
+                //vmap.setvar("blueengine.position_q".to_owned(),&getq);
 
-                let mut getq = vmap.getvar("blueengine.rotation_q");
-                getq = pooladd(&getq,&rotx);
-                getq = pooladd(&getq,&roty);
-                getq = pooladd(&getq,&rotz);
-                vmap.setvar("blueengine.rotation_q".to_owned(),&getq);
+                //let mut getq = vmap.getvar("blueengine.rotation_q");
+                vmap.pushstringarray("blueengine.rotation_q",&rotx);
+                vmap.pushstringarray("blueengine.rotation_q",&roty);
+                vmap.pushstringarray("blueengine.rotation_q",&rotz);
+                //vmap.setvar("blueengine.rotation_q".to_owned(),&getq);
 
-                let mut getq = vmap.getvar("blueengine.scale_q");
-                getq = pooladd(&getq,&scale);
-                vmap.setvar("blueengine.scale_q".to_owned(),&getq);
+                //let mut getq = vmap.getvar("blueengine.scale_q");
+                vmap.pushstringarray("blueengine.scale_q",&scale);
+                //vmap.setvar("blueengine.scale_q".to_owned(),&getq);
 
             }
         }
-        vmap.setvar(objectparts.to_owned(),&objectpartpool);
+        //vmap.setvar(objectparts.to_owned(),&objectpartpool);
         let properties = [".x",".y",".z"];
         let mut index = 0;
         for prop in properties{
@@ -105,8 +110,8 @@ impl Bn3models{
 
 
         let objectparts = objectname.to_owned() + ".parts";
-        let  objectpartpool = vmap.getvar(&objectparts);
-        if objectpartpool == ""{
+        let  objectpartpool = vmap.getstringarray(&objectparts);
+        if objectpartpool.len() <= 1{
             // well theres nothing in the object!
             return
         }
@@ -137,8 +142,8 @@ impl Bn3models{
 
         //let mut updatepool = vmap.getvar("blueengine.update_q");
 
-        let mut pospool = vmap.getvar("blueengine.position_q");
-        for thispart in split(&objectpartpool,NC_ARRAY_DELIM){
+        //let mut pospool = vmap.getvar("blueengine.position_q");
+        for thispart in objectpartpool{
             if thispart != "" {
                 let thispartxref = thispart.to_owned() + ".offx";
                 let thispartx = match vmap.getvar(&thispartxref).parse::<f32>(){
@@ -163,24 +168,24 @@ impl Bn3models{
                 vmap.setvar(thispartyref,&thisparty.to_string());
                 vmap.setvar(thispartzref,&thispartz.to_string());
                 let posqstring = thispart.to_owned() + "," + &thispartx.to_string() + "," + &thisparty.to_string() + "," + &thispartz.to_string() + ",";
-                pospool = pooladd(&pospool,&posqstring);
+                vmap.pushstringarray("blueengine.position_q",&posqstring);
                 //updatepool = pooladd(&updatepool,&thispart);
             }
         }
         //vmap.setvar("blueengine.update_q".to_owned(),&updatepool);
-        vmap.setvar("blueengine.position_q".to_owned(),&pospool);
+        //vmap.setvar("blueengine.position_q".to_owned(),&pospool);
 
     }
     pub fn delete(object:&str,vmap:&mut Varmap){
         let objectparts = object.to_owned() + ".parts";
-        if objectparts != ""{
-            let  objectpartpool = vmap.getvar(&objectparts);
-            let mut deletionq = vmap.getvar("blueengine.deletion_q");
-            for part in split(&objectpartpool,NC_ARRAY_DELIM){
-                deletionq = pooladd(&deletionq,&part);
-                vmap.delobj(part);
+        if objectparts != "" && objectparts != ".parts"{
+            let  objectpartpool = vmap.getstringarray(&objectparts);
+            //let mut deletionq = vmap.getvar("blueengine.deletion_q");
+            for part in objectpartpool{
+                vmap.pushstringarray("blueengine.deletion_q",&part);
+                vmap.delobj(&part);
             }
-            vmap.setvar("blueengine.deletion_q".to_owned(),&deletionq);
+            //vmap.setvar("blueengine.deletion_q".to_owned(),&deletionq);
             vmap.delobj(object);
         }
     }

@@ -1,16 +1,18 @@
 
 class blueengine{
+    self.title = "testing"
+    self.renderheight = 1080
+    self.renderwidth = 1920
+    self.render = "Vulkan"
+}
+class blueengine{
     func setcamerapos(posx,posy,posz,targetx,targety,targetz){
         if posx == "" || posy == "" || posz == ""{
             return false
         }
-        if targetz != ""{
-            toset = cat posx "," posy "," posz "," targetx "," targety "," targetz 
-        }
-        else{
-            toset = cat posx "," posy "," posz
-        }
-        self.camera_q = pooladd(self.camera_q,toset)
+
+        camerasetposition(posx,posy,posz,targetx,targety,targetz)
+        //self.camera_q = pooladd(self.camera_q,toset)
     }
     func setanim(id,animarray){
         if id == "" return
@@ -18,16 +20,11 @@ class blueengine{
     }
     func addsquare(id,texture){
         if id == "" return
-        self.square_q = pooladd(self.square_q,id)
-        *id.x = 0
-        *id.y = 0
-        *id.z = 0
-        *id.rx = 0
-        *id.ry = 0
-        *id.rz = 0
-        *id.sx = 10
-        *id.sy = 10
-        *id.sz = 0
+        nodespawnsquare(id)
+        mytexture2 = textureload(texture)
+        textureset(mynode,mytexture2)
+        
+
     }
 
     func bmpfont(id){     
@@ -36,47 +33,47 @@ class blueengine{
 
     func addtexture(fileloc){
         eval = stringtoeval(fileloc)
-        if fileloc = "" return
-        self.textureload_q = pooladd(self.textureload_q,fileloc)
+        if fileloc = ""{
+            print("cannot add texture filelocation empty")
+            return "error"
+        }
+        print(cat("addingtexture:",fileloc))
+        mytexture2 = textureload(fileloc)
+        //self.textureload_q = pooladd(self.textureload_q,fileloc)
     }
 
     func settexture(object,arg_texture){
-        if object == "" return
-        if arg_texture == "" return
-        obj = combine(object,",",arg_texture)
-        self.textureset_q = pooladd(self.textureset_q,obj)
+        if object == "" || arg_texture == "" return
+        obj = combine(object,",",arg_texture,",")
+        textureset(object,texture)
+        //self.textureset_q = pooladd(self.textureset_q,obj)
     }
 
     func setcolor(object,argb){
         if object == "" return
         if argb == "" return
-        obj = combine(object,",",argb)
-        self.color_q = pooladd(self.color_q,obj)
+        //obj = combine(object,",",argb)
+        nodesetcolor(object,argb)
+        //self.color_q = pooladd(self.color_q,obj)
     }
 
     func delete(object){
         if object == "" return
-        self.deletion_q = pooladd(self.deletion_q,object)
+        nodedelete(object)
+        //self.deletion_q = pooladd(self.deletion_q,object)
     }
 
     func setposition(object,posx,posy,posz){
         if object = "" || object = self{
             return false
         }
-        *object.x = posx
-        *object.y = posy
-        *object.z = posz
-        toset = combine(object,",",posx,",",posy,",",posz)
-        self.position_q = pooladd(self.position_q,toset)
+
+        nodesetposition(object,posx,posy,posx)
     }
 
     func setscale(object,posx,posy,posz){
         if obj = "" return false
-        *object.sx = posx
-        *object.sy = posy
-        *object.sz = posz
-        toset = combine(object,",",posx,",",posy,",",posz)
-        self.scale_q = pooladd(self.scale_q,toset)
+        nodesetscale(object,posx,posy,posz)
     }
 
     func setrotation(object,rotation,axis){
@@ -96,10 +93,12 @@ class blueengine{
 
         //*object.*tempaxis = rotation
         toset = combine(object,",",rotation,",",axis,",")
+        nodesetrotation(object,rotation,axis)
         self.rotation_q = pooladd(self.rotation_q,toset)
     }
 
     func construct(){
+        print("constructing engine test")
         blueengine_textures = "blueengine_textures"
         self.square_q = ""
         self.textureload_q = ""
@@ -130,6 +129,7 @@ class blueengine{
                 //print(cat("bmpfonts:",x))
             }
         }
+
         textures = [
             "resources/img2.png",
             "resources/blood.png",
@@ -141,16 +141,12 @@ class blueengine{
             "resources/grass_road_up.png",
             "resources/grass_road_side.png"
             ]
-        for xt in textures {
+        for xt in textures{
             if xt != ""{
                 self.addtexture(xt)
             }
         }
-        for xt in listdir("resources/bmpfont/rngwhite") {
-            if xt != ""{
-                self.addtexture(cat("resources/bmpfont/rngwhite",xt))
-            }
-        }
+
         //self.addtexture("/home/skorm/ramdisk_home/nc.jpg")
 
             loadtimerdiff = timerdiff(loadtimer)
@@ -162,3 +158,5 @@ class blueengine{
        
     }
 }
+
+print(iscode("blueengine__addtextures"(),"r"))

@@ -1,23 +1,24 @@
 class blueengine{
     self.title = "Multiple sprites and animations example"
-    self.renderwidth = 1280
-    self.renderheight = 720
-    self.powermode = true
+    self.renderwidth = 1920
+    self.renderheight = 1080
+    self.powermode = false
     self.vsync = false
+    self.render = "Vulkan"
 }
 
 class mysprites{
     func construct(){
         if self != "mysprites"{
-            spriteload(self,"resources/characters/dude1")
+            spriteload(self,"resources/characters/cammy")
             self.getallanims = spritegetanimations(self)
             max = self.getallanims[?] - 1
-            pickrandom = random(2,max,0)
+            pickrandom = random(1,subtract(self.getallanims[?],1),0)
             spritesetanimation(self,self.getallanims[pickrandom])
-            ranx = random(-27.0,27.0,3)
-            rany = random(-17.0,17.0,3)
-            ranz = random(-20.0,-17.0,3)
-            nodesetposition(self,ranx,rany,ranz)
+            self.x = random(-27.0,27.0,3)
+            self.y = random(-17.0,17.0,3)
+            self.z = random(-20.0,-17.0,3)
+            nodesetposition(self,self.x,self.y,self.z)
             print(cat("spawned:",self))
         }
     }
@@ -30,11 +31,27 @@ class mysprites{
 // so we create a array of playersprites_1 till _13
 // and instantiate the object to implement mysprites, 
 //object will automaticly trigger the last defined construct function (can be redefined by another implement)
-uniquenamearray = identifierarray("playersprite_",500)
-for x in uniquenamearray{
-    obj x : mysprites
-}
+uniquenamearray = identifierarray("playersprite_",150)
+maxspawnings = uniquenamearray[?]
+func spawn(){
+    spawncounter = 0
+    coroutine "spawner"{
+        obj uniquenamearray[spawncounter] : mysprites
+        spawncounter ++
+        if spawncounter >= maxspawnings{
+            break "spawner"
+        }
+    }
 
+}
+func spawninstant(){
+    for x in uniquenamearray{
+        if x != ""{
+            obj x : mysprites
+        }
+        
+    }
+}
 spritesetanimation(mynode,"anim_runleft")
 nodesetposition(mynode,2.0,0.0,-2.0)
 mynode = spriteload("mynode","resources/characters/dude1")
@@ -61,6 +78,12 @@ coroutine "gameloop"{
                 *x.destruct()
             }
         }
+        if key.o == "down" {
+            spawn()
+        }
+         if key.i == "down" {
+            spawninstant()
+        }
         if key.a == "down"{
             spritesetanimation(mynode,"anim_idleleft")
             nodesetposition(mynode2,-2.0)
@@ -70,6 +93,10 @@ coroutine "gameloop"{
         if key.d == "down"{
             spritesetanimation(mynode,"anim_idleright")
             nodesetposition(mynode2,2.0)
+        }
+        if key.esc == "down"{
+            run("./bluenc run examples/newgame.nc")
+            break "gameloop"
         }
     }
 }

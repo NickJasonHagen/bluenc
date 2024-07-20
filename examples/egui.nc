@@ -1,4 +1,8 @@
-
+class blueengine{
+    self.title = "example eGUI bluenc"
+    self.renderheight = 1080
+    self.renderwidth = 1920
+}
 // so the with the nscript egui system you can create menu objects and layer them by executing functions.
 // you can delete the object using objdelete()
 
@@ -7,6 +11,11 @@ func showcasefunction(){
     mynode.rz = mynode.rz + 1.0
     nodesetrotation(mynode,mynode.rx,mynode.ry,mynode.rz)
     nodesetcolor(mynode,colorvar)
+}
+func backtomainmenu(){
+    run("./bluenc run examples/newgame.nc")
+    break "gameloop"
+    exit
 }
 //create a new window ui with the identifier mainmenu ( nscript object)
 mygui = eguiwindow("mainmenu","Showcase MainMenu!")
@@ -59,6 +68,9 @@ arraycombo = ["on","off","standby"]
 selectedfromarraycombo = "off"
 eguicombo(mygui,"radio options","selectedfromarraycombo","arraycombo")
 
+// exitbutton
+eguibutton(mygui,"exit to mainmenu","backtomainmenu()")
+
 // spawn a test node
 mynode = nodespawnsquare("mynode")
 mytexture = textureload("resources/BlueLogoDiscord.png")
@@ -69,5 +81,6 @@ coroutine "gameloop"{
         if key.esc == "down"{
             eguiopenwindow(mygui)
         }
+
     }
 }

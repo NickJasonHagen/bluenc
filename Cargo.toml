@@ -13,9 +13,9 @@ overflow-checks = false
 
 [dependencies]
 nalgebra = "0.32.3"
-blue_engine = "0.5.8"
+blue_engine = "0.5.14"
 #blue_engine_egui = "0.5.2"
-blue_engine_utilities = "0.5.8"
+blue_engine_utilities = "0.5.14"
 egui-snarl = "0.3.0"
 #blue_engine = { git = "https://github.com/AryanpurTech/BlueEngine" , rev ="5e6bc453970368cb6ca0156070dd63c3f54dad4c" }
 #blue_engine_utilities = {git = "https://github.com/AryanpurTech/BlueEngineUtilities.git"}
